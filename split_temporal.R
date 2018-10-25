@@ -1,13 +1,14 @@
 split_AR = "model {
 
+  #Data model for MgCa observations
+
   for(i in 1:length(MgCa)){
     MgCa[i] ~ dnorm(MgCa.m[i], 1 / MgCa.var[i])
 
     MgCa.var[i] = (MgCa.m[i] * 0.01) ^ 2
 
-    MgCa.m[i] = MgCa.m.e[i]
-    
-    MgCa.m.e[i] = e.1 * MgCa.sw[i] ^ e.2 * exp(e.3 * BWT[MgCa.age.ind[i]])
+    MgCa.m[i] = lc[1] + lc[2] * BWT[MgCa.age.ind[i]] * MgCa.sw[i] ^ lc[3]
+    #MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i]])
 
     MgCa.sw[i] ~ dnorm(MgCa.sw.m[i], 1 / 0.03 ^ 2)
     MgCa.sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa.age[i] + MgCa_sw.b[3] * MgCa.age[i] ^ 2 + MgCa_sw.b[4] * MgCa.age[i] ^ 3
@@ -15,24 +16,56 @@ split_AR = "model {
 
   }
 
-  e.1 ~ dnorm(e.1.m, 1 / e.1.var)
-  e.2 ~ dnorm(e.2.m, 1 / e.2.var)
-  e.3 ~ dnorm(e.3.m, 1 / e.3.var)
-  e.1.m = 0.66
-  e.1.var = 0.04 ^ 2
-  e.2.m = 0.27
-  e.2.var = 0.03 ^ 2
-  e.3.m = 0.114
-  e.3.var = 0.01 ^ 2
+  #Data model for MgCa_calib observations
+
+  for(i in 1:length(MgCa_calib)){
+    MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], 1 / (MgCa_calib.m[i] * 0.01) ^ 2)
+
+    MgCa_calib.m[i] = lc[1] + lc[2] * MgCa_calib.bwt[i] * MgCa_calib.sw[i] ^ lc[3]
+    #MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
+
+    MgCa_calib.sw[i] ~ dnorm(MgCa_calib.sw.m[i], 1 / 0.03 ^ 2)
+    MgCa_calib.sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa_calib.age[i] + MgCa_sw.b[3] * MgCa_calib.age[i] ^ 2 + MgCa_sw.b[4] * MgCa_calib.age[i] ^ 3
+
+  }
+
+  #Priors on MgCa_calib data model parameters
+
+  #ec[1] ~ dnorm(ec.1.m, 1 / ec.1.var)
+  #ec[2] ~ dnorm(ec.2.m, 1 / ec.2.var)
+  #ec[3] ~ dnorm(ec.3.m, 1 / ec.3.var)
+
+  lc[1] ~ dnorm(lc.1.m, 1 / lc.1.var)
+  lc[2] ~ dnorm(lc.2.m, 1 / lc.2.var)
+  lc[3] ~ dnorm(lc.3.m, 1 / lc.3.var)
+
+  ec.1.m = 0.7
+  ec.1.var = 0.04 ^ 2
+  ec.2.m = 0.4
+  ec.2.var = 0.03 ^ 2
+  ec.3.m = 0.1
+  ec.3.var = 0.01 ^ 2
+
+  lc.1.m = 1.4
+  lc.1.var = 0.02 ^ 2
+  lc.2.m = 0.11
+  lc.2.var = 0.002 ^ 2
+  lc.3.m = -0.019
+  lc.3.var = 0.01 ^ 2
+
+  #Data model for d18O observations
 
   for(i in 1:length(d18O)){
     d18O[i] ~ dnorm(d18O.m[i], 1 / d18O.var)
     
-    d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a.1[i] + a.2[i] * BWT[d18O.age.ind[i]] + a.3[i] * BWT[d18O.age.ind[i]] ^ 2
-    a.1[i] ~ dnorm(a.1.m, 1 / a.1.var)
-    a.2[i] ~ dnorm(a.2.m, 1 / a.2.var)
-    a.3[i] ~ dnorm(a.3.m, 1 / a.3.var)
+    d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a.1 + a.2 * BWT[d18O.age.ind[i]] + a.3 * BWT[d18O.age.ind[i]] ^ 2
   }
+
+  # Priors on d18O data model parameters
+
+  a.1 ~ dnorm(a.1.m, 1 / a.1.var)
+  a.2 ~ dnorm(a.2.m, 1 / a.2.var)
+  a.3 ~ dnorm(a.3.m, 1 / a.3.var)
 
   a.1.m = 3.31
   a.1.var = 0.02 ^ 2
@@ -43,6 +76,8 @@ split_AR = "model {
 
   d18O.var = 0.1 ^ 2
 
+  #System model for BWT and d18O timeseries
+
   for(i in 2:nages){
     d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
     BWT[i] = BWT[i-1] + BWT.eps[i]
@@ -51,6 +86,8 @@ split_AR = "model {
     BWT.eps[i] ~ dnorm(BWT.eps[i - 1] * BWT.eps.ac, 1 / BWT.var)
 
   }
+
+  #Priors on BWT and d18O timeseries model parameters
 
   d18O_sw.eps[1] ~ dnorm(0, 1 / d18O_sw.var)
   BWT.eps[1] ~ dnorm(0, 1 / BWT.var) 
@@ -80,11 +117,15 @@ split_AR = "model {
   BWT.var.m = 0.35
   BWT.var.var = 0.2 ^ 2
 
+  #Data model for MgCa_sw observations
+
   for(i in 1:length(MgCa_sw)){
     MgCa_sw[i] ~ dnorm(MgCa_sw.m[i], 1 / MgCa_sw.sd[i] ^ 2)
     MgCa_sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa_sw.age[i] + MgCa_sw.b[3] * MgCa_sw.age[i] ^ 2 + MgCa_sw.b[4] * MgCa_sw.age[i] ^ 3
 
   }
+
+  #Priors on MgCa_sw model parameters  
 
   MgCa_sw.b[1] ~ dnorm(5.2, 1 / 0.3 ^ 2)
   MgCa_sw.b[2] ~ dnorm(-0.238, 1 / 0.05 ^ 2)

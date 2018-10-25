@@ -135,27 +135,34 @@ o_age.ind = round((ts.min - d_o$Age.Ma) / ts.step) + 1
 d_mgca = d[!is.na(d$MgCa),]
 mgca_age.ind = round((ts.min - d_mgca$Age.Ma) / ts.step) + 1
 
-##Read in seawater MgCa data
+##Read in paleo-seawater MgCa data
 d_mgca_sw = read.csv("mgca_sw.txt")
 
+##Read in MgCa calibration dataset
+d_mgca_calib = read.csv("mgca_calib.csv")
+
 ##Parameters to be saved
-parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "d18O_sw.eps.ac", "d18O_sw.var",
-               "MgCa_sw.b")
+parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "MgCa_sw.b", "lc",
+               "d18O_sw.eps.ac", "d18O_sw.var")
 
 ##Data to pass to BUGS model
 dat = list(nages = ts.len, age.old = ts.min, age.int = ts.step,
+           MgCa_calib.age = d_mgca_calib$Age, MgCa_calib.bwt = d_mgca_calib$BWT, MgCa_calib = d_mgca_calib$MgCa,
            MgCa_sw.age = d_mgca_sw$Age, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
            MgCa.age.ind = mgca_age.ind, MgCa = d_mgca$MgCa, 
            d18O.age.ind = o_age.ind, d18O = d_o$d18O)
 
+##Here's the BUGS code
 source("split_temporal.R")
 
+##Run the inversion
 t1 = proc.time()
 post2 = jags(model.file = textConnection(split_AR), parameters.to.save = parameters, 
             data = dat, inits = NULL, n.chains=3, n.iter = 50000, 
             n.burnin = 1000, n.thin = 25)  
 proc.time() - t1
 
+##A couple of standard plots of the modeled timeseries
 plot(0, 0, xlab="Age", ylab ="Temperature", xlim=c(11,18), ylim=c(4,11))
 for(i in 1:nrow(post2$BUGSoutput$sims.list$BWT)){
   lines(ts.ages, post2$BUGSoutput$sims.list$BWT[i,], col = rgb(0,0,0, 0.01))
