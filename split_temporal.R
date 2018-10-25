@@ -7,14 +7,13 @@ split_AR = "model {
 
     MgCa.m[i] = MgCa.m.e[i]
     
-    MgCa.m.e[i] = e.1 * MgCa_sw[i] ^ e.2 * exp(e.3 * BWT[MgCa.age.ind[i]])
-    
-    MgCa_sw[i] ~ dunif(MgCa_sw.m[i] - MgCa_sw.r, MgCa_sw.m[i] + MgCa_sw.r)
-    MgCa_sw.m[i] = 5.2 - 0.238 * Age[i] + 0.00661 * Age[i] ^ 2 - 6.66e-5 * Age[i] ^ 3
+    MgCa.m.e[i] = e.1 * MgCa.sw[i] ^ e.2 * exp(e.3 * BWT[MgCa.age.ind[i]])
+
+    MgCa.sw[i] ~ dnorm(MgCa.sw.m[i], 1 / 0.03 ^ 2)
+    MgCa.sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa.age[i] + MgCa_sw.b[3] * MgCa.age[i] ^ 2 + MgCa_sw.b[4] * MgCa.age[i] ^ 3
+    MgCa.age[i] = age.old - age.int * (MgCa.age.ind[i] - 1)
 
   }
-
-  MgCa_sw.r = 0.5
 
   e.1 ~ dnorm(e.1.m, 1 / e.1.var)
   e.2 ~ dnorm(e.2.m, 1 / e.2.var)
@@ -66,8 +65,8 @@ split_AR = "model {
   BWT.init.min = 5
   BWT.init.max = 9
 
-  d18O_sw.eps.ac ~ dunif(0, 1)
-  BWT.eps.ac ~ dunif(0, 1)
+  d18O_sw.eps.ac ~ dunif(0, 0.4)
+  BWT.eps.ac ~ dunif(0, 0.4)
 
   d18O_sw.var ~ dgamma(d18O_sw.var.k, 1 / d18O_sw.var.theta)
   d18O_sw.var.k = d18O_sw.var.m / d18O_sw.var.theta
@@ -78,7 +77,19 @@ split_AR = "model {
   BWT.var ~ dgamma(BWT.var.k, 1 / BWT.var.theta)
   BWT.var.k = BWT.var.m / BWT.var.theta
   BWT.var.theta = BWT.var.var / BWT.var.m
-  BWT.var.m = 0.1
+  BWT.var.m = 0.35
   BWT.var.var = 0.2 ^ 2
+
+  for(i in 1:length(MgCa_sw)){
+    MgCa_sw[i] ~ dnorm(MgCa_sw.m[i], 1 / MgCa_sw.sd[i] ^ 2)
+    MgCa_sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa_sw.age[i] + MgCa_sw.b[3] * MgCa_sw.age[i] ^ 2 + MgCa_sw.b[4] * MgCa_sw.age[i] ^ 3
+
+  }
+
+  MgCa_sw.b[1] ~ dnorm(5.2, 1 / 0.3 ^ 2)
+  MgCa_sw.b[2] ~ dnorm(-0.238, 1 / 0.05 ^ 2)
+  MgCa_sw.b[3] ~ dnorm(6.61e-3, 1 / 1e-3 ^ 2)
+  MgCa_sw.b[4] ~ dnorm(-6.66e-5, 1 / 1e-5 ^ 2)
+
 }
 "

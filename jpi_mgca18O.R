@@ -111,27 +111,42 @@ lines(ts.ages, post$BUGSoutput$summary[72:142, 3], col="red", lty=3)
 lines(ts.ages, post$BUGSoutput$summary[72:142, 7], col="red", lty=3)
 points(d$Age.Ma, rep(-1, nrow(d)), pch=21, bg = "white")
 
-###version 2 splits MgCa and d18O data 
-
-d = read.xlsx("Lear_2015_data.xlsx", sheetIndex = 1)
+###version 2 splits MgCa and d18O data, adds swMgCa model 
 
 set.seed(19395)
 
+##Set up timeseries for d18O_sw and BWT modeling
 ts.min = 18
 ts.max = 11
-ts.step = 0.05
+ts.step = 0.1
 ts.ages = seq(ts.min, ts.max, -ts.step)
 ts.len = length(ts.ages)
 
+##Prep the foram data, first read
+d = read.xlsx("Lear_2015_data.xlsx", sheetIndex = 1)
+
+##Now split out the d18O data and strip one outlier
 d_o = d[!is.na(d$d18O),]
 d_o = d_o[d_o$Depth.m != 442.48,]
+#Timeseries index for each d18O sample
 o_age.ind = round((ts.min - d_o$Age.Ma) / ts.step) + 1
 
+##Now split out the MgCa data and get TS index
 d_mgca = d[!is.na(d$MgCa),]
 mgca_age.ind = round((ts.min - d_mgca$Age.Ma) / ts.step) + 1
 
-parameters = c("d18O_sw", "BWT", "d18O_sw.eps.ac", "BWT.eps.ac", "d18O_sw.var", "BWT.var")
-dat = list(nages = ts.len, Age = d_mgca$Age.Ma, MgCa.age.ind = mgca_age.ind, MgCa = d_mgca$MgCa, d18O.age.ind = o_age.ind, d18O = d_o$d18O)
+##Read in seawater MgCa data
+d_mgca_sw = read.csv("mgca_sw.txt")
+
+##Parameters to be saved
+parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "d18O_sw.eps.ac", "d18O_sw.var",
+               "MgCa_sw.b")
+
+##Data to pass to BUGS model
+dat = list(nages = ts.len, age.old = ts.min, age.int = ts.step,
+           MgCa_sw.age = d_mgca_sw$Age, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
+           MgCa.age.ind = mgca_age.ind, MgCa = d_mgca$MgCa, 
+           d18O.age.ind = o_age.ind, d18O = d_o$d18O)
 
 source("split_temporal.R")
 
@@ -145,18 +160,18 @@ plot(0, 0, xlab="Age", ylab ="Temperature", xlim=c(11,18), ylim=c(4,11))
 for(i in 1:nrow(post2$BUGSoutput$sims.list$BWT)){
   lines(ts.ages, post2$BUGSoutput$sims.list$BWT[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, post2$BUGSoutput$summary[1:141, 5], col="red")
-lines(ts.ages, post2$BUGSoutput$summary[1:141, 3], col="red", lty=3)
-lines(ts.ages, post2$BUGSoutput$summary[1:141, 7], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 5], col="red")
+lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 3], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 7], col="red", lty=3)
 points(d_mgca$Age.Ma, rep(4, nrow(d_mgca)), pch=21, bg = "white")
 
 plot(0, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(11,18), ylim=c(-1,1.5))
 for(i in 1:nrow(post2$BUGSoutput$sims.list$d18O_sw)){
   lines(ts.ages, post2$BUGSoutput$sims.list$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, post2$BUGSoutput$summary[144:284, 5], col="red")
-lines(ts.ages, post2$BUGSoutput$summary[144:284, 3], col="red", lty=3)
-lines(ts.ages, post2$BUGSoutput$summary[144:284, 7], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[(ts.len+7):(ts.len*2+6), 5], col="red")
+lines(ts.ages, post2$BUGSoutput$summary[(ts.len+7):(ts.len*2+6), 3], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[(ts.len+7):(ts.len*2+6), 7], col="red", lty=3)
 points(d_o$Age.Ma, rep(-1, nrow(d_o)), pch=21, bg = "white")
 
 
