@@ -138,18 +138,36 @@ mgca_age.ind = round((ts.min - d_mgca$Age.Ma) / ts.step) + 1
 ##Read in paleo-seawater MgCa data
 d_mgca_sw = read.csv("mgca_sw.txt")
 
+##Set up timeseries for MgCa_sw modeling
+mgca_ts.min = 110
+mgca_ts.max = 0
+mgca_ts.step = 1
+mgca_ts.ages = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
+mgca_ts.len = length(mgca_ts.ages)
+
+##Age index for seawater MgCa samples
+MgCa_sw_age.ind = round((mgca_ts.min - d_mgca_sw$Age) / mgca_ts.step) + 1
+
+##Add age seawater MgCa TS indicies for MgCa foram data
+mgca_age.ind.sw = round((mgca_ts.min - d_mgca$Age.Ma) / mgca_ts.step) + 1
+mgca_age.ind.all = matrix(c(mgca_age.ind, mgca_age.ind.sw), ncol = 2)
+
 ##Read in MgCa calibration dataset
 d_mgca_calib = read.csv("mgca_calib.csv")
 
+##Age index for MgCa calibration samples
+mgca_calib_age.ind = round((mgca_ts.min - d_mgca_calib$Age) / mgca_ts.step) + 1
+
 ##Parameters to be saved
-parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "MgCa_sw.b", "lc",
-               "d18O_sw.eps.ac", "d18O_sw.var")
+parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "lc",
+               "d18O_sw.eps.ac", "d18O_sw.var", 
+               "MgCa_sw_m", "MgCa_sw_m.var", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to BUGS model
-dat = list(nages = ts.len, age.old = ts.min, age.int = ts.step,
-           MgCa_calib.age = d_mgca_calib$Age, MgCa_calib.bwt = d_mgca_calib$BWT, MgCa_calib = d_mgca_calib$MgCa,
-           MgCa_sw.age = d_mgca_sw$Age, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
-           MgCa.age.ind = mgca_age.ind, MgCa = d_mgca$MgCa, 
+dat = list(nages = ts.len, nmgca.ages = mgca_ts.len,
+           MgCa_calib.bwt = d_mgca_calib$BWT, MgCa_calib = d_mgca_calib$MgCa,
+           MgCa_sw.age.ind = MgCa_sw.age.ind, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
+           MgCa.age.ind = mgca_age.ind.all, MgCa = d_mgca$MgCa, 
            d18O.age.ind = o_age.ind, d18O = d_o$d18O)
 
 ##Here's the BUGS code
@@ -172,15 +190,23 @@ lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 3], col="red", lty=3)
 lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 7], col="red", lty=3)
 points(d_mgca$Age.Ma, rep(4, nrow(d_mgca)), pch=21, bg = "white")
 
-plot(0, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(11,18), ylim=c(-1,1.5))
+plot(0, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(11,18), ylim=c(-1.5,1))
 for(i in 1:nrow(post2$BUGSoutput$sims.list$d18O_sw)){
   lines(ts.ages, post2$BUGSoutput$sims.list$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, post2$BUGSoutput$summary[(ts.len+7):(ts.len*2+6), 5], col="red")
-lines(ts.ages, post2$BUGSoutput$summary[(ts.len+7):(ts.len*2+6), 3], col="red", lty=3)
-lines(ts.ages, post2$BUGSoutput$summary[(ts.len+7):(ts.len*2+6), 7], col="red", lty=3)
-points(d_o$Age.Ma, rep(-1, nrow(d_o)), pch=21, bg = "white")
+lines(ts.ages, post2$BUGSoutput$summary[(ts.len+mgca_ts.len+5):(mgca_ts.len+ts.len*2+4), 5], col="red")
+lines(ts.ages, post2$BUGSoutput$summary[(ts.len+mgca_ts.len+5):(mgca_ts.len+ts.len*2+4), 3], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[(ts.len+mgca_ts.len+5):(mgca_ts.len+ts.len*2+4), 7], col="red", lty=3)
+points(d_o$Age.Ma, rep(-1.5, nrow(d_o)), pch=21, bg = "white")
 
+plot(0, 0, xlab="Age", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0,6))
+for(i in 1:nrow(post2$BUGSoutput$sims.list$MgCa_sw_m)){
+  lines(mgca_ts.ages, post2$BUGSoutput$sims.list$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
+}
+lines(mgca_ts.ages, post2$BUGSoutput$summary[(ts.len+3):(ts.len+2+mgca_ts.len), 5], col="red")
+lines(mgca_ts.ages, post2$BUGSoutput$summary[(ts.len+3):(ts.len+2+mgca_ts.len), 3], col="red", lty=3)
+lines(mgca_ts.ages, post2$BUGSoutput$summary[(ts.len+3):(ts.len+2+mgca_ts.len), 7], col="red", lty=3)
+points(d_o$Age.Ma, rep(-1, nrow(d_o)), pch=21, bg = "white")
 
 ###Now let's try to Shackelton site
 d.i = read.table("Birner_2016/datasets/339-U1385_isotope_toRead.tab", sep = "\t", header = TRUE)

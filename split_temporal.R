@@ -7,12 +7,10 @@ split_AR = "model {
 
     MgCa.var[i] = (MgCa.m[i] * 0.01) ^ 2
 
-    MgCa.m[i] = lc[1] + lc[2] * BWT[MgCa.age.ind[i]] * MgCa.sw[i] ^ lc[3]
-    #MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i]])
+    MgCa.m[i] = lc[1] + lc[2] * BWT[MgCa.age.ind[i,1]] * MgCa.sw[i] ^ lc[3]
+    #MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i,1]])
 
-    MgCa.sw[i] ~ dnorm(MgCa.sw.m[i], 1 / 0.03 ^ 2)
-    MgCa.sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa.age[i] + MgCa_sw.b[3] * MgCa.age[i] ^ 2 + MgCa_sw.b[4] * MgCa.age[i] ^ 3
-    MgCa.age[i] = age.old - age.int * (MgCa.age.ind[i] - 1)
+    MgCa.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
 
   }
 
@@ -24,8 +22,7 @@ split_AR = "model {
     MgCa_calib.m[i] = lc[1] + lc[2] * MgCa_calib.bwt[i] * MgCa_calib.sw[i] ^ lc[3]
     #MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
 
-    MgCa_calib.sw[i] ~ dnorm(MgCa_calib.sw.m[i], 1 / 0.03 ^ 2)
-    MgCa_calib.sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa_calib.age[i] + MgCa_sw.b[3] * MgCa_calib.age[i] ^ 2 + MgCa_sw.b[4] * MgCa_calib.age[i] ^ 3
+    MgCa_calib.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
 
   }
 
@@ -117,20 +114,36 @@ split_AR = "model {
   BWT.var.m = 0.35
   BWT.var.var = 0.2 ^ 2
 
-  #Data model for MgCa_sw observations
+  #Data model for seawater MgCa observations
 
   for(i in 1:length(MgCa_sw)){
-    MgCa_sw[i] ~ dnorm(MgCa_sw.m[i], 1 / MgCa_sw.sd[i] ^ 2)
-    MgCa_sw.m[i] = MgCa_sw.b[1] + MgCa_sw.b[2] * MgCa_sw.age[i] + MgCa_sw.b[3] * MgCa_sw.age[i] ^ 2 + MgCa_sw.b[4] * MgCa_sw.age[i] ^ 3
-
+    MgCa_sw[i] ~ dnorm(MgCa_sw_m[MgCa_sw.age.ind[i]], 1 / MgCa_sw.sd[i] ^ 2)
+  
   }
 
-  #Priors on MgCa_sw model parameters  
+  #System model for MgCa_sw timeseries
 
-  MgCa_sw.b[1] ~ dnorm(5.2, 1 / 0.3 ^ 2)
-  MgCa_sw.b[2] ~ dnorm(-0.238, 1 / 0.05 ^ 2)
-  MgCa_sw.b[3] ~ dnorm(6.61e-3, 1 / 1e-3 ^ 2)
-  MgCa_sw.b[4] ~ dnorm(-6.66e-5, 1 / 1e-5 ^ 2)
+  for(i in 2:nmgca.ages){
+    MgCa_sw_m[i] = MgCa_sw_m[i-1] * (MgCa_sw_m.eps[i] + 1)
+    
+    MgCa_sw_m.eps[i] ~ dnorm(MgCa_sw_m.eps[i - 1] * MgCa_sw_m.eps.ac, 1 / MgCa_sw_m.var)
+  
+  }
+  
+  MgCa_sw_m.eps[1] ~ dnorm(0, 1 / MgCa_sw_m.var)
+  MgCa_sw_m[1] ~ dunif(MgCa_sw_m.init.min, MgCa_sw_m.init.max)
+  MgCa_sw_m.init.min = 1
+  MgCa_sw_m.init.max = 2
+
+  #Priors on MgCa_sw model parameters  
+  
+  MgCa_sw_m.eps.ac ~ dunif(0.95, 1)
+  
+  MgCa_sw_m.var ~ dgamma(MgCa_sw_m.var.k, 1 / MgCa_sw_m.var.theta)
+  MgCa_sw_m.var.k = MgCa_sw_m.var.m / MgCa_sw_m.var.theta
+  MgCa_sw_m.var.theta = MgCa_sw_m.var.var / MgCa_sw_m.var.m
+  MgCa_sw_m.var.m = 0.0001
+  MgCa_sw_m.var.var = 0.0001 ^ 2
 
 }
 "
