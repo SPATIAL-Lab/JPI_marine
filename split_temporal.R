@@ -3,9 +3,7 @@ split_AR = "model {
   #Data model for MgCa observations
 
   for(i in 1:length(MgCa)){
-    MgCa[i] ~ dnorm(MgCa.m[i], 1 / MgCa.var[i])
-
-    MgCa.var[i] = (MgCa.m[i] * 0.01) ^ 2
+    MgCa[i] ~ dnorm(MgCa.m[i], 1 / MgCa.sd ^ 2)
 
     #MgCa.m[i] = lc[1] + lc[2] * BWT[MgCa.age.ind[i,1]] * MgCa.sw[i] ^ lc[3]
     MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i,1]])
@@ -14,10 +12,13 @@ split_AR = "model {
 
   }
 
+  MgCa.sd = sd(MgCa_calib.res)
+
   #Data model for MgCa_calib observations
 
   for(i in 1:length(MgCa_calib)){
     MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], 1 / (MgCa_calib.m[i] * 0.01) ^ 2)
+    MgCa_calib.res[i] = MgCa_calib.m[i] - MgCa_calib[i]
 
     #MgCa_calib.m[i] = lc[1] + lc[2] * MgCa_calib.bwt[i] * MgCa_calib.sw[i] ^ lc[3]
     MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
