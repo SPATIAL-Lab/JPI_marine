@@ -3,25 +3,22 @@ split_AR = "model {
   #Data model for MgCa observations
 
   for(i in 1:length(MgCa)){
-    MgCa[i] ~ dnorm(MgCa.m[i], 1 / MgCa.sd ^ 2)
+    MgCa[i] ~ dnorm(MgCa.m[i], 1 / MgCa_calib.var)
 
-    #MgCa.m[i] = lc[1] + lc[2] * BWT[MgCa.age.ind[i,1]] * MgCa.sw[i] ^ lc[3]
-    MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i,1]])
+    MgCa.m[i] = lc[1] + lc[2] * BWT[MgCa.age.ind[i,1]] * MgCa.sw[i] ^ lc[3]
+    #MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i,1]])
 
     MgCa.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
 
   }
 
-  MgCa.sd = sd(MgCa_calib.res)
-
   #Data model for MgCa_calib observations
 
   for(i in 1:length(MgCa_calib)){
-    MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], 1 / (MgCa_calib.m[i] * 0.01) ^ 2)
-    MgCa_calib.res[i] = MgCa_calib.m[i] - MgCa_calib[i]
+    MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], 1 / MgCa_calib.var)
 
-    #MgCa_calib.m[i] = lc[1] + lc[2] * MgCa_calib.bwt[i] * MgCa_calib.sw[i] ^ lc[3]
-    MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
+    MgCa_calib.m[i] = lc[1] + lc[2] * MgCa_calib.bwt[i] * MgCa_calib.sw[i] ^ lc[3]
+    #MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
 
     MgCa_calib.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
 
@@ -29,13 +26,19 @@ split_AR = "model {
 
   #Priors on MgCa_calib data model parameters
 
-  ec[1] ~ dnorm(ec.1.m, 1 / ec.1.var)
-  ec[2] ~ dnorm(ec.2.m, 1 / ec.2.var)
-  ec[3] ~ dnorm(ec.3.m, 1 / ec.3.var)
+  MgCa_calib.var ~ dgamma(MgCa_calib.var.k, 1 / MgCa_calib.var.theta)
+  MgCa_calib.var.k = MgCa_calib.var.m / MgCa_calib.var.theta
+  MgCa_calib.var.theta = MgCa_calib.var.var / MgCa_calib.var.m
+  MgCa_calib.var.m = 0.14 ^ 2
+  MgCa_calib.var.var = 0.01
 
-  #lc[1] ~ dnorm(lc.1.m, 1 / lc.1.var)
-  #lc[2] ~ dnorm(lc.2.m, 1 / lc.2.var)
-  #lc[3] ~ dnorm(lc.3.m, 1 / lc.3.var)
+  #ec[1] ~ dnorm(ec.1.m, 1 / ec.1.var)
+  #ec[2] ~ dnorm(ec.2.m, 1 / ec.2.var)
+  #ec[3] ~ dnorm(ec.3.m, 1 / ec.3.var)
+
+  lc[1] ~ dnorm(lc.1.m, 1 / lc.1.var)
+  lc[2] ~ dnorm(lc.2.m, 1 / lc.2.var)
+  lc[3] ~ dnorm(lc.3.m, 1 / lc.3.var)
 
   ec.1.m = 0.7
   ec.1.var = 0.04 ^ 2
@@ -45,10 +48,10 @@ split_AR = "model {
   ec.3.var = 0.01 ^ 2
 
   lc.1.m = 1.4
-  lc.1.var = 0.02 ^ 2
+  lc.1.var = 0.1 ^ 2
   lc.2.m = 0.11
-  lc.2.var = 0.002 ^ 2
-  lc.3.m = -0.019
+  lc.2.var = 0.01 ^ 2
+  lc.3.m = -0.019 
   lc.3.var = 0.01 ^ 2
 
   #Data model for d18O observations

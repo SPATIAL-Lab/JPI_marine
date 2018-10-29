@@ -159,8 +159,8 @@ d_mgca_calib = read.csv("mgca_calib.csv")
 mgca_calib_age.ind = round((mgca_ts.min - d_mgca_calib$Age) / mgca_ts.step) + 1
 
 ##Parameters to be saved
-parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "ec",
-               "d18O_sw.eps.ac", "d18O_sw.var", 
+parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "lc",
+               "d18O_sw.eps.ac", "d18O_sw.var", "MgCa_calib.var",
                "MgCa_sw_m", "MgCa_sw_m.var", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to BUGS model
@@ -176,42 +176,47 @@ source("split_temporal.R")
 ##Run the inversion
 t1 = proc.time()
 post2 = jags(model.file = textConnection(split_AR), parameters.to.save = parameters, 
-            data = dat, inits = NULL, n.chains=3, n.iter = 250000, 
+            data = dat, inits = NULL, n.chains=3, n.iter = 50000, 
             n.burnin = 1000, n.thin = 25)  
 proc.time() - t1
+
+sims = nrow(post2$BUGSoutput$sims.list$BWT)
+BWT.start = match("BWT[1]", row.names(post2$BUGSoutput$summary))
+d18O.start = match("d18O_sw[1]", row.names(post2$BUGSoutput$summary))
+MgCa.start = match("MgCa_sw_m[1]", row.names(post2$BUGSoutput$summary))
 
 ##A couple of standard plots of the modeled timeseries
 jpeg("T_18O.jpg", units="in", width=6, height=7, res=300)
 layout(matrix(c(1,2), 2, 1))
 par(mar=c(4,4,1,1))
 plot(0, 0, xlab="Age", ylab ="Temperature", xlim=c(11,18), ylim=c(1,11))
-for(i in 1:nrow(post2$BUGSoutput$sims.list$BWT)){
+for(i in seq(1, sims, by = max(floor(sims / 5000),1))){
   lines(ts.ages, post2$BUGSoutput$sims.list$BWT[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 5], col="red")
-lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 3], col="red", lty=3)
-lines(ts.ages, post2$BUGSoutput$summary[1:ts.len, 7], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 5], col="red")
+lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 3], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 7], col="red", lty=3)
 points(d_mgca$Age.Ma, rep(1, nrow(d_mgca)), pch=21, bg = "white")
 
 plot(0, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(11,18), ylim=c(-1.5,1))
-for(i in 1:nrow(post2$BUGSoutput$sims.list$d18O_sw)){
+for(i in seq(1, sims, by = max(floor(sims / 5000),1))){
   lines(ts.ages, post2$BUGSoutput$sims.list$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, post2$BUGSoutput$summary[(ts.len+mgca_ts.len+5):(mgca_ts.len+ts.len*2+4), 5], col="red")
-lines(ts.ages, post2$BUGSoutput$summary[(ts.len+mgca_ts.len+5):(mgca_ts.len+ts.len*2+4), 3], col="red", lty=3)
-lines(ts.ages, post2$BUGSoutput$summary[(ts.len+mgca_ts.len+5):(mgca_ts.len+ts.len*2+4), 7], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 5], col="red")
+lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
+lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
 points(d_o$Age.Ma, rep(-1.5, nrow(d_o)), pch=21, bg = "white")
 dev.off()
 
 jpeg("MgCa_sw.jpg", units="in", width=6, height=3.5, res=300)
 par(mar=c(4,4,1,1))
-plot(-10, 0, xlab="Age", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(1,6))
-for(i in 1:nrow(post2$BUGSoutput$sims.list$MgCa_sw_m)){
+plot(-10, 0, xlab="Age", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0.8,6))
+for(i in seq(1, sims, by = max(floor(sims / 5000),1))){
   lines(mgca_ts.ages, post2$BUGSoutput$sims.list$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
 }
-lines(mgca_ts.ages, post2$BUGSoutput$summary[(ts.len+3):(ts.len+2+mgca_ts.len), 5], col="red")
-lines(mgca_ts.ages, post2$BUGSoutput$summary[(ts.len+3):(ts.len+2+mgca_ts.len), 3], col="red", lty=3)
-lines(mgca_ts.ages, post2$BUGSoutput$summary[(ts.len+3):(ts.len+2+mgca_ts.len), 7], col="red", lty=3)
+lines(mgca_ts.ages, post2$BUGSoutput$summary[MgCa.start:(MgCa.start+mgca_ts.len-1), 5], col="red")
+lines(mgca_ts.ages, post2$BUGSoutput$summary[MgCa.start:(MgCa.start+mgca_ts.len-1), 3], col="red", lty=3)
+lines(mgca_ts.ages, post2$BUGSoutput$summary[MgCa.start:(MgCa.start+mgca_ts.len-1), 7], col="red", lty=3)
 points(d_mgca_sw$Age, d_mgca_sw$MgCa, pch=21, bg = "white")
 points(d_o$Age.Ma, rep(1, nrow(d_o)), pch=21, bg = "black")
 dev.off()
