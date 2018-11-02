@@ -114,7 +114,7 @@ points(d$Age.Ma, rep(-1, nrow(d)), pch=21, bg = "white")
 
 ###version 2 splits MgCa and d18O data, adds swMgCa model 
 
-set.seed(1995)
+set.seed(1197)
 
 ##Set up timeseries for d18O_sw and BWT modeling
 ts.min = 18
@@ -159,14 +159,19 @@ d_mgca_calib = read.csv("mgca_calib.csv")
 ##Age index for MgCa calibration samples
 mgca_calib_age.ind = round((mgca_ts.min - d_mgca_calib$Age) / mgca_ts.step) + 1
 
+##Read in d18O calibration dataset
+d_d18O_calib = read.csv("U_comp.csv")
+d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
+
 ##Parameters to be saved
-parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "lc",
-               "d18O_sw.eps.ac", "d18O_sw.var", "MgCa_calib.var",
+parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "d18O_sw.eps.ac", "d18O_sw.var", 
+               "lc", "MgCa_calib.var", "a", "d18O_calib.var"
                "MgCa_sw_m", "MgCa_sw_m.var", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to BUGS model
 dat = list(nages = ts.len, nmgca.ages = mgca_ts.len,
-           MgCa_calib.bwt = d_mgca_calib$BWT, MgCa_calib = d_mgca_calib$MgCa,
+           MgCa_calib.bwt.m = d_mgca_calib$BWT, MgCa_calib.bwt.sd = d_mgca_calib$BWT_sd, MgCa_calib = d_mgca_calib$MgCa,
+           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$U.SW_d18O,
            MgCa_sw.age.ind = mgca_sw_age.ind, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
            MgCa.age.ind = mgca_age.ind.all, MgCa = d_mgca$MgCa, 
            d18O.age.ind = o_age.ind, d18O = d_o$d18O)
@@ -177,7 +182,7 @@ source("split_temporal.R")
 ##Run the inversion
 t1 = proc.time()
 post2 = jags(model.file = textConnection(split_AR), parameters.to.save = parameters, 
-            data = dat, inits = NULL, n.chains=3, n.iter = 50000, 
+            data = dat, inits = NULL, n.chains=3, n.iter = 5000, 
             n.burnin = 1000, n.thin = 25)  
 proc.time() - t1
 

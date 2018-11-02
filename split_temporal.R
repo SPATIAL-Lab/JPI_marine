@@ -20,6 +20,8 @@ split_AR = "model {
     MgCa_calib.m[i] = lc[1] + lc[2] * MgCa_calib.bwt[i] * MgCa_calib.sw[i] ^ lc[3]
     #MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
 
+    MgCa_calib.bwt[i] ~ dnorm(MgCa_calib.bwt.m[i], 1 / MgCa_calib.bwt.sd[i] ^ 2)
+
     MgCa_calib.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
 
   }
@@ -59,15 +61,31 @@ split_AR = "model {
   for(i in 1:length(d18O)){
     d18O[i] ~ dnorm(d18O.m[i], 1 / d18O.var[i])
 
-    d18O.var[i] = ifelse(d18O.age.ind[i] < 345, 0.1 ^ 2, 0.4 ^ 2)    
-    d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a.1 + a.2 * BWT[d18O.age.ind[i]] + a.3 * BWT[d18O.age.ind[i]] ^ 2
+    d18O.var[i] = ifelse(d18O.age.ind[i] < 345, d18O_calib.var, d18O_calib.var + 0.3 ^ 2)    
+    d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a[1] + a[2] * BWT[d18O.age.ind[i]] + a[3] * BWT[d18O.age.ind[i]] ^ 2
+  }
+
+  #Data model for d18O_calib observations
+
+  for(i in 1:length(d18O_calib)){
+    d18O_calib[i] ~ dnorm(d18O_calib.m[i], 1 / d18O_calib.var)
+
+    d18O_calib.m[i] = a[1] + a[2] * d18O_calib.bwt[i] + a[3] * d18O_calib.bwt[i] ^ 2
+
+    d18O_calib.bwt[i] ~ dnorm(d18O_calib.bwt.m[i], 1 / d18O_calib.bwt.sd[i])
   }
 
   # Priors on d18O data model parameters
 
-  a.1 ~ dnorm(a.1.m, 1 / a.1.var)
-  a.2 ~ dnorm(a.2.m, 1 / a.2.var)
-  a.3 ~ dnorm(a.3.m, 1 / a.3.var)
+  d18O_calib.var ~ dgamma(d18O_calib.var.k, 1 / d18O_calib.var.theta)
+  d18O_calib.var.k = d18O_calib.var.m / d18O_calib.var.theta
+  d18O_calib.var.theta = d18O_calib.var.var / d18O_calib.var.m
+  d18O_calib.var.m = 0.1 ^ 2
+  d18O_calib.var.var = 0.01
+
+  a[1] ~ dnorm(a.1.m, 1 / a.1.var)
+  a[2] ~ dnorm(a.2.m, 1 / a.2.var)
+  a[3] ~ dnorm(a.3.m, 1 / a.3.var)
 
   a.1.m = 3.31
   a.1.var = 0.02 ^ 2
