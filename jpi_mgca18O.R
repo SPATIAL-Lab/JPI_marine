@@ -7,6 +7,7 @@ library(R2jags)
 library(xlsx)
 
 setwd("C:/Users/gjbowen/Dropbox/HypoMirror/JPI_marine/")
+setwd("C:/Users/u0133977/Dropbox/HypoMirror/JPI_marine/")
 source("lear_model.R")
 
 ##Analysis of Lear 2015 data
@@ -113,21 +114,21 @@ points(d$Age.Ma, rep(-1, nrow(d)), pch=21, bg = "white")
 
 ###version 2 splits MgCa and d18O data, adds swMgCa model 
 
-set.seed(19395)
+set.seed(1995)
 
 ##Set up timeseries for d18O_sw and BWT modeling
 ts.min = 18
-ts.max = 11
+ts.max = 0
 ts.step = 0.05
 ts.ages = seq(ts.min, ts.max, -ts.step)
 ts.len = length(ts.ages)
 
 ##Prep the foram data, first read
-d = read.xlsx("Lear_2015_data.xlsx", sheetIndex = 1)
+d = read.csv("Lear_combined.csv")
 
 ##Now split out the d18O data and strip one outlier
 d_o = d[!is.na(d$d18O),]
-d_o = d_o[d_o$Depth.m != 442.48,]
+d_o = d_o[d_o$Sample.ID != "806B 47-5 38-43",]
 #Timeseries index for each d18O sample
 o_age.ind = round((ts.min - d_o$Age.Ma) / ts.step) + 1
 
@@ -186,19 +187,19 @@ d18O.start = match("d18O_sw[1]", row.names(post2$BUGSoutput$summary))
 MgCa.start = match("MgCa_sw_m[1]", row.names(post2$BUGSoutput$summary))
 
 ##A couple of standard plots of the modeled timeseries
-jpeg("T_18O.jpg", units="in", width=6, height=7, res=300)
+jpeg("T_18O_full.jpg", units="in", width=6, height=7, res=300)
 layout(matrix(c(1,2), 2, 1))
 par(mar=c(4,4,1,1))
-plot(0, 0, xlab="Age", ylab ="Temperature", xlim=c(11,18), ylim=c(1,11))
+plot(-10, 0, xlab="Age", ylab ="Temperature", xlim=c(0,18), ylim=c(-3,11))
 for(i in seq(1, sims, by = max(floor(sims / 5000),1))){
   lines(ts.ages, post2$BUGSoutput$sims.list$BWT[i,], col = rgb(0,0,0, 0.01))
 }
 lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 5], col="red")
 lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 3], col="red", lty=3)
 lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 7], col="red", lty=3)
-points(d_mgca$Age.Ma, rep(1, nrow(d_mgca)), pch=21, bg = "white")
+points(d_mgca$Age.Ma, rep(-3, nrow(d_mgca)), pch=21, bg = "white")
 
-plot(0, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(11,18), ylim=c(-1.5,1))
+plot(-10, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(0,18), ylim=c(-1.5,2))
 for(i in seq(1, sims, by = max(floor(sims / 5000),1))){
   lines(ts.ages, post2$BUGSoutput$sims.list$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
@@ -208,7 +209,7 @@ lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 7], co
 points(d_o$Age.Ma, rep(-1.5, nrow(d_o)), pch=21, bg = "white")
 dev.off()
 
-jpeg("MgCa_sw.jpg", units="in", width=6, height=3.5, res=300)
+jpeg("MgCa_sw_full.jpg", units="in", width=6, height=3.5, res=300)
 par(mar=c(4,4,1,1))
 plot(-10, 0, xlab="Age", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0.8,6))
 for(i in seq(1, sims, by = max(floor(sims / 5000),1))){
@@ -220,6 +221,33 @@ lines(mgca_ts.ages, post2$BUGSoutput$summary[MgCa.start:(MgCa.start+mgca_ts.len-
 points(d_mgca_sw$Age, d_mgca_sw$MgCa, pch=21, bg = "white")
 points(d_o$Age.Ma, rep(1, nrow(d_o)), pch=21, bg = "black")
 dev.off()
+
+##These are first stabs at plots showing derivatives for BWT, d18O_sw
+dv = double()
+plot(-1,-1,xlim=c(min(ts.ages),max(ts.ages)), ylim=c(-1.5,1.5))
+for(i in seq(1, sims, by = max(floor(sims / 3000),1))){
+  for(j in 1:140){
+    dv[j] = post2$BUGSoutput$sims.list$BWT[i,j+1] - post2$BUGSoutput$sims.list$BWT[i,j]
+  }
+  lines(ts.ages[1:140], dv, col = rgb(0,0,0, 0.01))
+}
+for(j in 1:140){
+  dv[j] = post2$BUGSoutput$summary[BWT.start+j,5] - post2$BUGSoutput$summary[BWT.start+j-1,5]
+}
+lines(ts.ages[1:140], dv, col="red")
+
+dv = double()
+plot(-1,-1,xlim=c(min(ts.ages),max(ts.ages)), ylim=c(-0.5,0.5))
+for(i in seq(1, sims, by = max(floor(sims / 3000),1))){
+  for(j in 1:140){
+    dv[j] = post2$BUGSoutput$sims.list$d18O_sw[i,j+1] - post2$BUGSoutput$sims.list$d18O_sw[i,j]
+  }
+  lines(ts.ages[1:140], dv, col = rgb(0,0,0, 0.01))
+}
+for(j in 1:140){
+  dv[j] = post2$BUGSoutput$summary[d18O.start+j,5] - post2$BUGSoutput$summary[d18O.start+j-1,5]
+}
+lines(ts.ages[1:140], dv, col="red")
 
 ###Now let's try to Shackelton site
 d.i = read.table("Birner_2016/datasets/339-U1385_isotope_toRead.tab", sep = "\t", header = TRUE)

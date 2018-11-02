@@ -57,8 +57,9 @@ split_AR = "model {
   #Data model for d18O observations
 
   for(i in 1:length(d18O)){
-    d18O[i] ~ dnorm(d18O.m[i], 1 / d18O.var)
-    
+    d18O[i] ~ dnorm(d18O.m[i], 1 / d18O.var[i])
+
+    d18O.var[i] = ifelse(d18O.age.ind[i] < 345, 0.1 ^ 2, 0.4 ^ 2)    
     d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a.1 + a.2 * BWT[d18O.age.ind[i]] + a.3 * BWT[d18O.age.ind[i]] ^ 2
   }
 
@@ -74,8 +75,6 @@ split_AR = "model {
   a.2.var = 0.005 ^ 2
   a.3.m = 0.0011
   a.3.var = 0.0002 ^ 2
-
-  d18O.var = 0.1 ^ 2
 
   #System model for BWT and d18O timeseries
 
@@ -147,7 +146,7 @@ split_AR = "model {
   MgCa_sw_m.var.k = MgCa_sw_m.var.m / MgCa_sw_m.var.theta
   MgCa_sw_m.var.theta = MgCa_sw_m.var.var / MgCa_sw_m.var.m
   MgCa_sw_m.var.m = 0.0001
-  MgCa_sw_m.var.var = 0.0001 ^ 2
+  MgCa_sw_m.var.var = 0.00003 ^ 2
 
 }
 "
