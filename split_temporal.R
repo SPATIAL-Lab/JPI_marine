@@ -1,4 +1,4 @@
-split_AR = "model {
+model {
 
   #Data model for MgCa observations
 
@@ -87,12 +87,12 @@ split_AR = "model {
   a[2] ~ dnorm(a.2.m, 1 / a.2.var)
   a[3] ~ dnorm(a.3.m, 1 / a.3.var)
 
-  a.1.m = 3.31
-  a.1.var = 0.02 ^ 2
-  a.2.m = -0.245
-  a.2.var = 0.005 ^ 2
-  a.3.m = 0.0011
-  a.3.var = 0.0002 ^ 2
+  a.1.m = 4.05
+  a.1.var = 0.04 ^ 2
+  a.2.m = -0.242
+  a.2.var = 0.015 ^ 2
+  a.3.m = 0.0008
+  a.3.var = 0.0009 ^ 2
 
   #System model for BWT and d18O timeseries
 
@@ -167,4 +167,4 @@ split_AR = "model {
   MgCa_sw_m.var.var = 0.00003 ^ 2
 
 }
-"
+
