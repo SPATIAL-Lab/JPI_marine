@@ -142,7 +142,7 @@ d_mgca_sw = read.csv("mgca_sw.txt")
 ##Set up timeseries for MgCa_sw modeling
 mgca_ts.min = 110
 mgca_ts.max = 0
-mgca_ts.step = 2
+mgca_ts.step = 1
 mgca_ts.ages = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
 mgca_ts.len = length(mgca_ts.ages)
 
@@ -164,8 +164,8 @@ d_d18O_calib = read.csv("C_comp.csv")
 d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
 ##Parameters to be saved
-parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "d18O_sw.eps.ac", "d18O_sw.var", 
-               "lc", "MgCa_calib.var", "a", "d18O_calib.var", "d18O_calib.sd.off",
+parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18O_sw.pre", 
+               "lc", "MgCa_calib.pre", "a", "d18O_calib.pre", "d18O_calib.sd.off",
                "MgCa_sw_m", "MgCa_sw_m.pre", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to BUGS model
@@ -179,8 +179,8 @@ dat = list(nages = ts.len, nmgca.ages = mgca_ts.len,
 ##Run the inversion
 t1 = proc.time()
 post2 = jags.parallel(model.file = "split_temporal.R", parameters.to.save = parameters, 
-             data = dat, n.chains=3, n.iter = 20000, 
-             n.burnin = 10000, n.thin = 10) 
+             data = dat, n.chains=3, n.iter = 1000000, 
+             n.burnin = 100000, n.thin = 10) 
 proc.time() - t1
 
 #Get some indicies
@@ -202,14 +202,14 @@ lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 3], col="red", lty=3)
 lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 7], col="red", lty=3)
 points(d_mgca$Age.Ma, rep(-3, nrow(d_mgca)), pch=21, bg = "white")
 
-plot(-10, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(0,18), ylim=c(1.25,-2))
+plot(-10, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(0,18), ylim=c(2,-1.5))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(ts.ages, post2$BUGSoutput$sims.list$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
 lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 5], col="red")
 lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
 lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
-points(d_o$Age.Ma, rep(1.25, nrow(d_o)), pch=21, bg = "white")
+points(d_o$Age.Ma, rep(2, nrow(d_o)), pch=21, bg = "white")
 dev.off()
 
 jpeg("MgCa_sw_full.jpg", units="in", width=6, height=3.5, res=300)
