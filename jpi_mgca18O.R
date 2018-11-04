@@ -113,8 +113,7 @@ lines(ts.ages, post$BUGSoutput$summary[72:142, 7], col="red", lty=3)
 points(d$Age.Ma, rep(-1, nrow(d)), pch=21, bg = "white")
 
 ###version 2 splits MgCa and d18O data, adds swMgCa model and calibration datasets
-library(foreach)
-library(doParallel)
+
 set.seed(1197)
 
 ##Set up timeseries for d18O_sw and BWT modeling
@@ -143,7 +142,7 @@ d_mgca_sw = read.csv("mgca_sw.txt")
 ##Set up timeseries for MgCa_sw modeling
 mgca_ts.min = 110
 mgca_ts.max = 0
-mgca_ts.step = 1
+mgca_ts.step = 2
 mgca_ts.ages = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
 mgca_ts.len = length(mgca_ts.ages)
 
@@ -161,18 +160,18 @@ d_mgca_calib = read.csv("mgca_calib.csv")
 mgca_calib_age.ind = round((mgca_ts.min - d_mgca_calib$Age) / mgca_ts.step) + 1
 
 ##Read in d18O calibration dataset
-d_d18O_calib = read.csv("U_comp.csv")
+d_d18O_calib = read.csv("C_comp.csv")
 d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
 ##Parameters to be saved
 parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.var", "d18O_sw.eps.ac", "d18O_sw.var", 
-               "lc", "MgCa_calib.var", "a", "d18O_calib.var",
-               "MgCa_sw_m", "MgCa_sw_m.var", "MgCa_sw_m.eps.ac")
+               "lc", "MgCa_calib.var", "a", "d18O_calib.var", "d18O_calib.sd.off",
+               "MgCa_sw_m", "MgCa_sw_m.pre", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to BUGS model
 dat = list(nages = ts.len, nmgca.ages = mgca_ts.len,
            MgCa_calib.bwt.m = d_mgca_calib$BWT, MgCa_calib.bwt.sd = d_mgca_calib$BWT_sd, MgCa_calib = d_mgca_calib$MgCa,
-           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$U.SW_d18O,
+           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$C.SW_d18O,
            MgCa_sw.age.ind = mgca_sw_age.ind, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
            MgCa.age.ind = mgca_age.ind.all, MgCa = d_mgca$MgCa, 
            d18O.age.ind = o_age.ind, d18O = d_o$d18O)
@@ -180,8 +179,8 @@ dat = list(nages = ts.len, nmgca.ages = mgca_ts.len,
 ##Run the inversion
 t1 = proc.time()
 post2 = jags.parallel(model.file = "split_temporal.R", parameters.to.save = parameters, 
-             data = dat, inits = NULL, n.chains=4, n.iter = 100000, 
-             n.burnin = 10000, n.thin = 25) 
+             data = dat, n.chains=3, n.iter = 20000, 
+             n.burnin = 10000, n.thin = 10) 
 proc.time() - t1
 
 #Get some indicies
@@ -203,14 +202,14 @@ lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 3], col="red", lty=3)
 lines(ts.ages, post2$BUGSoutput$summary[BWT.start:ts.len, 7], col="red", lty=3)
 points(d_mgca$Age.Ma, rep(-3, nrow(d_mgca)), pch=21, bg = "white")
 
-plot(-10, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(0,18), ylim=c(-2,1.25))
+plot(-10, 0, xlab="Age", ylab ="Seawater d18O", xlim=c(0,18), ylim=c(1.25,-2))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(ts.ages, post2$BUGSoutput$sims.list$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
 lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 5], col="red")
 lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
 lines(ts.ages, post2$BUGSoutput$summary[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
-points(d_o$Age.Ma, rep(-2, nrow(d_o)), pch=21, bg = "white")
+points(d_o$Age.Ma, rep(1.25, nrow(d_o)), pch=21, bg = "white")
 dev.off()
 
 jpeg("MgCa_sw_full.jpg", units="in", width=6, height=3.5, res=300)
@@ -225,6 +224,8 @@ lines(mgca_ts.ages, post2$BUGSoutput$summary[MgCa.start:(MgCa.start+mgca_ts.len-
 points(d_mgca_sw$Age, d_mgca_sw$MgCa, pch=21, bg = "white")
 points(d_o$Age.Ma, rep(1, nrow(d_o)), pch=21, bg = "black")
 dev.off()
+
+save(post2, file = "full_post.RData")
 
 ##These are first stabs at plots showing derivatives for BWT, d18O_sw
 dv = double()
