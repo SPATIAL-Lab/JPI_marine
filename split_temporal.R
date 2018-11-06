@@ -48,22 +48,24 @@ model {
   ec.3.var = 0.01 ^ 2
 
   lc.1.m = 1.5
-  lc.1.var = 0.28 ^ 2
+  lc.1.var = 0.1 ^ 2
   lc.2.m = 0.1
-  lc.2.var = 0.03 ^ 2
+  lc.2.var = 0.01 ^ 2
   lc.3.m = -0.02 
-  lc.3.var = 0.047 ^ 2
+  lc.3.var = 0.03 ^ 2
 
   #Data model for d18O observations
 
   for(i in 1:length(d18O)){
     d18O[i] ~ dnorm(d18O.m[i], d18O.pre[i])
 
-    d18O.pre[i] = ifelse(d18O.age.ind[i] < 345, d18O_calib.pre, 1 / (1 / d18O_calib.pre + (d18O_calib.sd.off ^ 2)))    
+    d18O.pre[i] = ifelse(d18O.age.ind[i] < 345, d18O_calib.pre, d18O_calib.pre.2)    
     d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a[1] + a[2] * BWT[d18O.age.ind[i]] + a[3] * BWT[d18O.age.ind[i]] ^ 2
   }
 
-  d18O_calib.sd.off ~ dnorm(0.25, 1 / 0.05 ^ 2)
+  d18O_calib.pre.2 ~ dgamma(d18O_calib.pre.2.shp, d18O_calib.pre.2.rate)
+  d18O_calib.pre.2.shp = 6
+  d18O_calib.pre.2.rate = 1
   
   #Data model for d18O_calib observations
 
@@ -78,8 +80,8 @@ model {
   # Priors on d18O data model parameters
 
   d18O_calib.pre ~ dgamma(d18O_calib.pre.shp, d18O_calib.pre.rate)
-  d18O_calib.pre.shp = 1
-  d18O_calib.pre.rate = 1/100
+  d18O_calib.pre.shp = 3
+  d18O_calib.pre.rate = 1/30
 
   a[1] ~ dnorm(a.1.m, 1 / a.1.var)
   a[2] ~ dnorm(a.2.m, 1 / a.2.var)
@@ -89,7 +91,7 @@ model {
   a.1.var = 0.02 ^ 2
   a.2.m = -0.237
   a.2.var = 0.01 ^ 2
-  a.3.m = 0.0005
+  a.3.m = 0.001
   a.3.var = 0.0005 ^ 2
 
   #System model for BWT and d18O timeseries
