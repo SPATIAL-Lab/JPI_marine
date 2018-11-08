@@ -95,11 +95,11 @@ d18O.start = match("d18O_sw[1]", row.names(su))
 MgCa.start = match("MgCa_sw_m[1]", row.names(su))
 
 ##A couple of standard plots of the modeled timeseries
-jpeg("T_18O_full.jpg", units="in", width=6, height=7, res=300)
-layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.6*2.54), lcm(3.4*2.54)))
-par(mai=c(0.2,1,0.2,0.2))
-plot(-10, 0, xlab = "", ylab ="Temperature", xlim=c(0,18), ylim=c(-3,11),
-     axes = FALSE)
+png("T_18O_full.png", units="in", width=5, height=5, res=300)
+layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.1*2.54), lcm(2.9*2.54)))
+par(mai=c(0.2,1,0.2,0.2), cex=0.85)
+plot(-10, 0, xlab = "", ylab = expression("BWT ("*degree*" C)"),
+     xlim=c(0,18), ylim=c(-3,11), axes = FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
@@ -109,13 +109,17 @@ for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
 lines(ts.ages, su[BWT.start:ts.len, 5], col="red")
 lines(ts.ages, su[BWT.start:ts.len, 3], col="red", lty=3)
 lines(ts.ages, su[BWT.start:ts.len, 7], col="red", lty=3)
-lines(ts.ages, su[BWT.start:ts.len, 4], col="red", lty=2)
-lines(ts.ages, su[BWT.start:ts.len, 6], col="red", lty=2)
+#lines(ts.ages, su[BWT.start:ts.len, 4], col="red", lty=2)
+#lines(ts.ages, su[BWT.start:ts.len, 6], col="red", lty=2)
 tp = d_mgca[order(d_mgca$Age.Ma), "Age.Ma"]
 points(tp, rep(-3, nrow(d_mgca)), pch=21, bg = "white")
+xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "A")
 
+#Second panel for seawater d18O
 par(mai=c(1,1,0.2,0.2))
-plot(-10, 0, xlab = "Age (Ma)", ylab = expression(paste("Seawater ", delta^{2}, "H (\u2030, VSMOW)")), 
+plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
      xlim=c(0,18), ylim=c(2,-1.5))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
@@ -123,14 +127,18 @@ for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
 lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 5], col="red")
 lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
 lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
-lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 4], col="red", lty=2)
-lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 6], col="red", lty=2)
+#lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 4], col="red", lty=2)
+#lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 6], col="red", lty=2)
 op = d_o[order(d_o$Age.Ma),"Age.Ma"]
 points(op, rep(2, nrow(d_o)), pch=21, bg = "white")
+xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "B")
+
 dev.off()
 
-jpeg("MgCa_sw_full.jpg", units="in", width=6, height=3.5, res=300)
-par(mar=c(4,4,1,1))
+png("MgCa_sw_full.png", units="in", width=5, height=2.75, res=300)
+par(mar=c(4,4,1,1), cex=0.85)
 plot(-10, 0, xlab="Age (Ma)", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0.8,6))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(mgca_ts.ages, sl$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
@@ -138,10 +146,11 @@ for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
 lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 5], col="red")
 lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 3], col="red", lty=3)
 lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 7], col="red", lty=3)
-lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 4], col="red", lty=2)
-lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 6], col="red", lty=2)
+#lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 4], col="red", lty=2)
+#lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 6], col="red", lty=2)
 points(d_mgca_sw$Age, d_mgca_sw$MgCa, pch=21, bg = "white")
-points(d_o$Age.Ma, rep(1, nrow(d_o)), pch=21, bg = "black")
+points(d_mgca$Age.Ma, rep(1, nrow(d_mgca)), pch=21, bg = "black")
+points(d_mgca_calib$Age, rep(1, nrow(d_mgca_calib)), pch=21, bg = "grey")
 dev.off()
 
 ##Plotting priors and posteriors
@@ -163,14 +172,14 @@ text(xl, yl, "A")
 
 plotd(sl$lc[,2], col="red", ylab="")
 lined(rnorm(100000, 0.1, 0.01))
-title(xlab=expression(paste(alpha[1])), line = xoff)
+title(xlab=expression(paste(alpha[2])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")
 
 plotd(sl$lc[,3], col="red", ylab="")
 lined(rnorm(100000, -0.02, 0.03))
-title(xlab=expression(paste(alpha[1])), line = xoff)
+title(xlab=expression(paste(alpha[3])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "C")
@@ -222,17 +231,58 @@ title(xlab=expression(paste(sigma[paste(delta, "18Of")])), line = xoff)
 
 #####
 #Let's look at covariance for these parms
-smoothScatter(sl$lc[,1], sl$lc[,2])
-smoothScatter(sl$lc[,1], sl$lc[,3])
-smoothScatter(sl$lc[,2], sl$lc[,3])
+png("calibration_covar.png", res=300, units="in", width=6, height=4)
+layout(matrix(c(1,2,3,4,5,6), nrow=2, byrow=TRUE))
+par(mar=c(5,5,0.2,0.2))
+
+smoothScatter(sl$lc[,1], sl$lc[,2], xlab=expression(paste(alpha[1])), ylab=expression(paste(alpha[2])))
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "A")
+
+smoothScatter(sl$lc[,1], sl$lc[,3], xlab=expression(paste(alpha[1])), ylab=expression(paste(alpha[3])))
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "B")
+
+smoothScatter(sl$lc[,2], sl$lc[,3], xlab=expression(paste(alpha[2])), ylab=expression(paste(alpha[3])))
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "C")
+
+smoothScatter(sl$a[,1], sl$a[,2], xlab=expression(paste(beta[1])), ylab=expression(paste(beta[2])))
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "D")
+
+smoothScatter(sl$a[,1], sl$a[,3], xlab=expression(paste(beta[1])), ylab=expression(paste(beta[3])))
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "E")
+
+smoothScatter(sl$a[,2], sl$a[,3], xlab=expression(paste(beta[2])), ylab=expression(paste(beta[3])))
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "F")
+
+dev.off()
 
 lc.cor = cor(sl$lc)
-
-smoothScatter(sl$a[,1], sl$a[,2])
-smoothScatter(sl$a[,1], sl$a[,3])
-smoothScatter(sl$a[,2], sl$a[,3])
-
 a.cor = cor(sl$a)
+
+smoothScatter(sl$BWT.pre, sl$BWT.eps.ac)
+smoothScatter(sl$d18O_sw.pre, sl$d18O_sw.eps.ac)
+smoothScatter(sl$MgCa_sw_m.pre, sl$MgCa_sw_m.eps.ac)
+
+##This is kind of cool, BWT and d18Osw covariation across all sims
+png("env_covar.png", res=300, units="in", width=3, height=3)
+par(mar=c(5,5,0.5,0.5), cex=0.75)
+smoothScatter(sl$BWT, sl$d18O_sw, xlim = c(-3, 9), ylim = c(2, -1.5),
+              xlab=expression("BWT ("*degree*" C)"),
+              ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"))
+lines(c(5.9,5.2,5.9,3.3), c(-0.6,0.1,1.1,0.5), col="grey")
+arrows(3.3,0.5,-0.2,0.35, length=0.05, col="grey")
+dev.off()
 
 #####
 ##Time series properties
@@ -246,9 +296,9 @@ par(mai = c(0.5,0.5,0.1,0.1))
 plotd(sl$BWT.eps.ac, col="red", ylim=c(0,20))
 lined(sl$d18O_sw.eps.ac, col="red", lty=2)
 lines(c(0,0.4), c(2.5,2.5))
+title(xlab=expression(phi), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-title(xlab=expression(phi), line=xoff)
 text(xl, yl, "A")
 
 #BWT TS SD
