@@ -5,24 +5,25 @@ model {
   for(i in 1:length(MgCa)){
     MgCa[i] ~ dnorm(MgCa.m[i], MgCa_calib.pre)
 
-    MgCa.m[i] = (lc[1] + lc[2] * BWT[MgCa.age.ind[i,1]]) * MgCa.sw[i] ^ lc[3]
-    #MgCa.m[i] = ec[1] * MgCa.sw[i] ^ ec[2] * exp(ec[3] * BWT[MgCa.age.ind[i,1]])
+    MgCa.m[i] = (lc[1] + lc[2] * BWT[MgCa.age.ind[i]] + lc[3] * BWT[MgCa.age.ind[i]] ^ 2) * MgCa.sw[i] ^ lc[4]
 
-    MgCa.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
-
+    MgCa.sw[i] ~ dnorm(MgCa.sw.m, 1 / 0.03 ^ 2)
+    
   }
 
+  MgCa.sw.m ~ dnorm(MgCa_sw.neo[1], 1 / MgCa_sw.neo[2] ^ 2)
+  
   #Data model for MgCa_calib observations
 
   for(i in 1:length(MgCa_calib)){
     MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], MgCa_calib.pre)
 
-    MgCa_calib.m[i] = (lc[1] + lc[2] * MgCa_calib.bwt[i]) * MgCa_calib.sw[i] ^ lc[3]
+    MgCa_calib.m[i] = (lc[1] + lc[2] * MgCa_calib.bwt[i] + lc[3] * MgCa_calib.bwt[i] ^ 2) * MgCa_calib.sw[i] ^ lc[4]
     #MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
 
     MgCa_calib.bwt[i] ~ dnorm(MgCa_calib.bwt.m[i], 1 / MgCa_calib.bwt.sd[i] ^ 2)
 
-    MgCa_calib.sw[i] ~ dnorm(MgCa_sw_m[MgCa.age.ind[i,2]], 1 / 0.03 ^ 2)
+    MgCa_calib.sw[i] ~ dnorm(5.2, 1 / 0.03 ^ 2)
 
   }
 
@@ -39,33 +40,24 @@ model {
   lc[1] ~ dnorm(lc.1.m, 1 / lc.1.var)
   lc[2] ~ dnorm(lc.2.m, 1 / lc.2.var)
   lc[3] ~ dnorm(lc.3.m, 1 / lc.3.var)
-
-  ec.1.m = 0.7
-  ec.1.var = 0.04 ^ 2
-  ec.2.m = 0.4
-  ec.2.var = 0.03 ^ 2
-  ec.3.m = 0.1
-  ec.3.var = 0.01 ^ 2
+  lc[4] ~ dnorm(lc.4.m, 1 / lc.4.var)
 
   lc.1.m = 1.5
   lc.1.var = 0.1 ^ 2
   lc.2.m = 0.1
   lc.2.var = 0.01 ^ 2
-  lc.3.m = -0.02 
-  lc.3.var = 0.03 ^ 2
+  lc.3.m = 0
+  lc.3.var = 0.001 ^ 2
+  lc.4.m = -0.0237 
+  lc.4.var = 0.0252 ^ 2
 
   #Data model for d18O observations
 
   for(i in 1:length(d18O)){
-    d18O[i] ~ dnorm(d18O.m[i], d18O.pre[i])
+    d18O[i] ~ dnorm(d18O.m[i], d18O_calib.pre)
 
-    d18O.pre[i] = ifelse(d18O.age.ind[i] < 345, d18O_calib.pre, d18O_calib.pre.2)    
     d18O.m[i] = d18O_sw[d18O.age.ind[i]] + a[1] + a[2] * BWT[d18O.age.ind[i]] + a[3] * BWT[d18O.age.ind[i]] ^ 2
   }
-
-  d18O_calib.pre.2 ~ dgamma(d18O_calib.pre.2.shp, d18O_calib.pre.2.rate)
-  d18O_calib.pre.2.shp = 6
-  d18O_calib.pre.2.rate = 1
   
   #Data model for d18O_calib observations
 
@@ -117,11 +109,11 @@ model {
   d18O_sw.init.max = 1
 
   BWT.init ~ dunif(BWT.init.min, BWT.init.max)
-  BWT.init.min = 3
-  BWT.init.max = 8
+  BWT.init.min = 1
+  BWT.init.max = 5
 
-  d18O_sw.eps.ac ~ dunif(0, 0.4)
-  BWT.eps.ac ~ dunif(0, 0.4)
+  d18O_sw.eps.ac ~ dunif(0, 0.8)
+  BWT.eps.ac ~ dunif(0, 0.8)
 
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
   d18O_sw.pre.shp = 10
@@ -130,38 +122,6 @@ model {
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
   BWT.pre.shp = 20
   BWT.pre.rate = 2
-
-  #Data model for seawater MgCa observations
-
-  for(i in 1:length(MgCa_sw)){
-    MgCa_sw[i] ~ dnorm(MgCa_sw_m[MgCa_sw.age.ind[i]], 1 / MgCa_sw.sd[i] ^ 2)
-  
-  }
-
-  #System model for MgCa_sw timeseries
-
-  for(i in 2:nmgca.ages){
-    MgCa_sw_m[i] = MgCa_sw_m[i-1] * (MgCa_sw_m.eps[i] + 1)
-    
-    #MgCa_sw_m.eps[i] ~ dunif(MgCa_sw_m.eps.co[i] - MgCa_sw_m.eps.hr, MgCa_sw_m.eps.co[i] + MgCa_sw_m.eps.hr)
-    MgCa_sw_m.eps[i] ~ dnorm(MgCa_sw_m.eps[i - 1] * MgCa_sw_m.eps.ac, MgCa_sw_m.pre)
-  }
-  
-  #MgCa_sw_m.eps[1] ~ dunif(-MgCa_sw_m.eps.hr, MgCa_sw_m.eps.hr)
-  MgCa_sw_m.eps[1] ~ dnorm(0, MgCa_sw_m.pre)
-  MgCa_sw_m[1] ~ dunif(MgCa_sw_m.init.min, MgCa_sw_m.init.max)
-  MgCa_sw_m.init.min = 1
-  MgCa_sw_m.init.max = 2
-
-  #Priors on MgCa_sw model parameters  
-  
-  MgCa_sw_m.eps.ac ~ dunif(0.90, 1)
-  
-  #MgCa_sw_m.eps.hr = 0.01
-  
-  MgCa_sw_m.pre ~ dgamma(MgCa_sw_m.pre.shp, MgCa_sw_m.pre.rate)
-  MgCa_sw_m.pre.shp = 1000
-  MgCa_sw_m.pre.rate = 0.01
 
 }
 
