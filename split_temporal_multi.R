@@ -5,7 +5,7 @@ model {
   for(i in 1:length(MgCa.b)){
     MgCa.b[i] ~ dnorm(MgCa.b.m[i], MgCa_calib.pre)
 
-    MgCa.b.m[i] = (lc[1] + lc[2] * BWT.b[MgCa.age.ind.b[i]] + lc[3] * BWT.b[MgCa.age.ind.b[i]] ^ 2) * MgCa.sw.b[i] ^ lc[4]
+    MgCa.b.m[i] = (a[1] + a[2] * BWT.b[MgCa.age.ind.b[i]]) * MgCa.sw.b[i] ^ a[3]
 
     MgCa.sw.b[i] ~ dnorm(MgCa.sw.m, 1 / 0.03 ^ 2)
     
@@ -14,7 +14,7 @@ model {
   for(i in 1:length(MgCa.e)){
     MgCa.e[i] ~ dnorm(MgCa.e.m[i], MgCa_calib.pre)
     
-    MgCa.e.m[i] = (lc[1] + lc[2] * BWT.e[MgCa.age.ind.e[i]] + lc[3] * BWT.e[MgCa.age.ind.e[i]] ^ 2) * MgCa.sw.e[i] ^ lc[4]
+    MgCa.e.m[i] = (a[1] + a[2] * BWT.e[MgCa.age.ind.e[i]]) * MgCa.sw.e[i] ^ a[3]
     
     MgCa.sw.e[i] ~ dnorm(MgCa.sw.m, 1 / 0.03 ^ 2)
     
@@ -27,8 +27,7 @@ model {
   for(i in 1:length(MgCa_calib)){
     MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], MgCa_calib.pre)
 
-    MgCa_calib.m[i] = (lc[1] + lc[2] * MgCa_calib.bwt[i] + lc[3] * MgCa_calib.bwt[i] ^ 2) * MgCa_calib.sw[i] ^ lc[4]
-    #MgCa_calib.m[i] = ec[1] * MgCa_calib.sw[i] ^ ec[2] * exp(ec[3] * MgCa_calib.bwt[i])
+    MgCa_calib.m[i] = (a[1] + a[2] * MgCa_calib.bwt[i]) * MgCa_calib.sw[i] ^ a[3]
 
     MgCa_calib.bwt[i] ~ dnorm(MgCa_calib.bwt.m[i], 1 / MgCa_calib.bwt.sd[i] ^ 2)
 
@@ -42,64 +41,84 @@ model {
   MgCa_calib.pre.shp = 2
   MgCa_calib.pre.rate = 1/30
 
-  #ec[1] ~ dnorm(ec.1.m, 1 / ec.1.var)
-  #ec[2] ~ dnorm(ec.2.m, 1 / ec.2.var)
-  #ec[3] ~ dnorm(ec.3.m, 1 / ec.3.var)
-
-  lc[1] ~ dnorm(lc.1.m, 1 / lc.1.var)
-  lc[2] ~ dnorm(lc.2.m, 1 / lc.2.var)
-  lc[3] ~ dnorm(lc.3.m, 1 / lc.3.var)
-  lc[4] ~ dnorm(lc.4.m, 1 / lc.4.var)
-
-  lc.1.m = 1.5
-  lc.1.var = 0.1 ^ 2
-  lc.2.m = 0.1
-  lc.2.var = 0.01 ^ 2
-  lc.3.m = 0
-  lc.3.var = 0.001 ^ 2
-  lc.4.m = -0.0237 
-  lc.4.var = 0.0252 ^ 2
-
-  #Data model for d18O observations
-
-  for(i in 1:length(d18O.b)){
-    d18O.b[i] ~ dnorm(d18O.b.m[i], d18O_calib.pre)
-
-    d18O.b.m[i] = d18O_sw.b[d18O.age.ind.b[i]] + a[1] + a[2] * BWT.b[d18O.age.ind.b[i]] + a[3] * BWT.b[d18O.age.ind.b[i]] ^ 2
-  }
-
-  for(i in 1:length(d18O.e)){
-    d18O.e[i] ~ dnorm(d18O.e.m[i], d18O_calib.pre)
-    
-    d18O.e.m[i] = d18O_sw.e[d18O.age.ind.e[i]] + a[1] + a[2] * BWT.e[d18O.age.ind.e[i]] + a[3] * BWT.e[d18O.age.ind.e[i]] ^ 2
-  }
-  
-  #Data model for d18O_calib observations
-
-  for(i in 1:length(d18O_calib)){
-    d18O_calib[i] ~ dnorm(d18O_calib.m[i], d18O_calib.pre)
-
-    d18O_calib.m[i] = a[1] + a[2] * d18O_calib.bwt[i] + a[3] * d18O_calib.bwt[i] ^ 2
-
-    d18O_calib.bwt[i] ~ dnorm(d18O_calib.bwt.m[i], 1 / d18O_calib.bwt.sd[i])
-  }
-
-  # Priors on d18O data model parameters
-
-  d18O_calib.pre ~ dgamma(d18O_calib.pre.shp, d18O_calib.pre.rate)
-  d18O_calib.pre.shp = 3
-  d18O_calib.pre.rate = 1/30
-
   a[1] ~ dnorm(a.1.m, 1 / a.1.var)
   a[2] ~ dnorm(a.2.m, 1 / a.2.var)
   a[3] ~ dnorm(a.3.m, 1 / a.3.var)
 
-  a.1.m = 3.32
-  a.1.var = 0.02 ^ 2
-  a.2.m = -0.237
+  a.1.m = 1.5
+  a.1.var = 0.1 ^ 2
+  a.2.m = 0.1
   a.2.var = 0.01 ^ 2
-  a.3.m = 0.001
-  a.3.var = 0.0005 ^ 2
+  a.3.m = -0.0237 
+  a.3.var = 0.0252 ^ 2
+
+  #Data model for d18O observations
+
+  for(i in 1:length(d18O.b)){
+    d18O.b[i] ~ dnorm(d18O.b.m[i], d18O_calib.c.pre)
+
+    d18O.b.m[i] = d18O_sw.b[d18O.age.ind.b[i]] + b.c[1] + b.c[2] * BWT.b[d18O.age.ind.b[i]] + b.c[3] * BWT.b[d18O.age.ind.b[i]] ^ 2
+  }
+
+  for(i in 1:length(d18O.e)){
+    d18O.e[i] ~ dnorm(d18O.e.m[i], d18O_calib.u.pre)
+    
+    d18O.e.m[i] = d18O_sw.e[d18O.age.ind.e[i]] + b.u[1] + b.u[2] * BWT.e[d18O.age.ind.e[i]] + b.u[3] * BWT.e[d18O.age.ind.e[i]] ^ 2
+  }
+  
+  #Data model for d18O_calib observations - Uvigerina
+
+  for(i in 1:length(d18O_calib.u)){
+    d18O_calib.u[i] ~ dnorm(d18O_calib.u.m[i], d18O_calib.u.pre)
+
+    d18O_calib.u.m[i] = b.u[1] + b.u[2] * d18O_calib.u.bwt[i] + b.u[3] * d18O_calib.u.bwt[i] ^ 2
+
+    d18O_calib.u.bwt[i] ~ dnorm(d18O_calib.u.bwt.m[i], 1 / d18O_calib.u.bwt.sd[i])
+  }
+
+  # Priors on d18O data model parameters - Uvigerina
+
+  d18O_calib.u.pre ~ dgamma(d18O_calib.u.pre.shp, d18O_calib.u.pre.rate)
+  d18O_calib.u.pre.shp = 3
+  d18O_calib.u.pre.rate = 1/30
+
+  b.u[1] ~ dnorm(b.u.1.m, 1 / b.u.1.var)
+  b.u[2] ~ dnorm(b.u.2.m, 1 / b.u.2.var)
+  b.u[3] ~ dnorm(b.u.3.m, 1 / b.u.3.var)
+
+  b.u.1.m = 4.05
+  b.u.1.var = 0.06 ^ 2
+  b.u.2.m = -0.215
+  b.u.2.var = 0.02 ^ 2
+  b.u.3.m = -0.001
+  b.u.3.var = 0.001 ^ 2
+
+  #Data model for d18O_calib observations - Cib
+  
+  for(i in 1:length(d18O_calib.c)){
+    d18O_calib.c[i] ~ dnorm(d18O_calib.c.m[i], d18O_calib.c.pre)
+    
+    d18O_calib.c.m[i] = b.c[1] + b.c[2] * d18O_calib.c.bwt[i] + b.c[3] * d18O_calib.c.bwt[i] ^ 2
+    
+    d18O_calib.c.bwt[i] ~ dnorm(d18O_calib.c.bwt.m[i], 1 / d18O_calib.c.bwt.sd[i])
+  }
+  
+  # Priors on d18O data model parameters - Cib
+  
+  d18O_calib.c.pre ~ dgamma(d18O_calib.c.pre.shp, d18O_calib.c.pre.rate)
+  d18O_calib.c.pre.shp = 3
+  d18O_calib.c.pre.rate = 1/30
+  
+  b.c[1] ~ dnorm(b.c.1.m, 1 / b.c.1.var)
+  b.c[2] ~ dnorm(b.c.2.m, 1 / b.c.2.var)
+  b.c[3] ~ dnorm(b.c.3.m, 1 / b.c.3.var)
+  
+  b.c.1.m = 3.32
+  b.c.1.var = 0.02 ^ 2
+  b.c.2.m = -0.237
+  b.c.2.var = 0.01 ^ 2
+  b.c.3.m = 0.001
+  b.c.3.var = 0.0005 ^ 2
 
   #System model for BWT and d18O timeseries
 
@@ -122,13 +141,13 @@ model {
 
   d18O_sw.b.eps[1] ~ dnorm(0, d18O_sw.b.pre)
   BWT.b.eps[1] ~ dnorm(0, BWT.b.pre) 
-  d18O_sw.b[1] ~ dunif(0, 1.5)
-  BWT.b[1] ~ dunif(3, 6)
+  d18O_sw.b[1] ~ dunif(0, 1.2)
+  BWT.b[1] ~ dunif(2, 6)
   
   d18O_sw.e.eps[1] ~ dnorm(0, d18O_sw.e.pre)
   BWT.e.eps[1] ~ dnorm(0, BWT.e.pre) 
-  d18O_sw.e[1] ~ dunif(0, 1.5)
-  BWT.e[1] ~ dunif(0, 3)
+  d18O_sw.e[1] ~ dunif(-0.5, 0.5)
+  BWT.e[1] ~ dunif(-1, 3)
 
   d18O_sw.b.eps.ac ~ dunif(0, 0.8)
   BWT.b.eps.ac ~ dunif(0, 0.8)

@@ -51,42 +51,45 @@ mgca_age.ind.sw = round((mgca_ts.min - d_mgca$Age.Ma) / mgca_ts.step) + 1
 mgca_age.ind.all = matrix(c(mgca_age.ind, mgca_age.ind.sw), ncol = 2)
 
 ##Read in MgCa calibration dataset
-d_mgca_calib = read.csv("mgca_calib.csv")
+d_mgca_calib = read.csv("O_mgca_calib.csv")
 
 ##Age index for MgCa calibration samples
 mgca_calib_age.ind = round((mgca_ts.min - d_mgca_calib$Age) / mgca_ts.step) + 1
 
 ##Read in d18O calibration dataset
-d_d18O_calib = read.csv("C_comp.csv")
+d_d18O_calib = read.csv("C_d18O_calib.csv")
 d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
 ##Parameters to be saved
 parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18O_sw.pre", 
-               "lc", "MgCa_calib.pre", "a", "d18O_calib.pre", "d18O_calib.pre.2",
+               "a", "MgCa_calib.pre", "b", "d18O_calib.pre", "d18O_calib.pre.2",
                "MgCa_sw_m", "MgCa_sw_m.pre", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to the model
 dat = list(nages = ts.len, nmgca.ages = mgca_ts.len,
            MgCa_calib.bwt.m = d_mgca_calib$BWT, MgCa_calib.bwt.sd = d_mgca_calib$BWT_sd, MgCa_calib = d_mgca_calib$MgCa,
-           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$C.SW_d18O,
+           d18O_calib.bwt.m = d_d18O_calib$BWT, d18O_calib.bwt.sd = d_d18O_calib$BWT_sd, d18O_calib = d_d18O_calib$d18O_f.sw,
            MgCa_sw.age.ind = mgca_sw_age.ind, MgCa_sw = d_mgca_sw$MgCa, MgCa_sw.sd = d_mgca_sw$Sigma,
            MgCa.age.ind = mgca_age.ind.all, MgCa = d_mgca$MgCa, 
            d18O.age.ind = o_age.ind, d18O = d_o$d18O)
 
-##Run the inversion
+##Run the inversion - 15 hours for 1M samples
 t1 = proc.time()
 set.seed(t1[3])
-post2 = jags.parallel(model.file = "split_temporal.R", parameters.to.save = parameters, 
-             data = dat, n.chains=3, n.iter = 1000000, 
-             n.burnin = 100000, n.thin = 100) 
+n.iter = 1.5e6
+n.burnin = 1e5
+n.thin = floor((n.iter - n.burnin) / 5000)
+post.lear = do.call(jags.parallel, list(model.file = "split_temporal_lear.R", parameters.to.save = parameters, 
+                                         data = dat, n.chains=3, n.iter = n.iter, 
+                                         n.burnin = n.burnin, n.thin = n.thin))
 proc.time() - t1
 
-#save(post2, file = "full_post.RData")
-#load("full_post.RData")
+save(post.lear, file = "post_lear.RData")
+#load("post_lear.RData")
 
 #Shorthand
-sl = post2$BUGSoutput$sims.list
-su = post2$BUGSoutput$summary
+sl = post.lear$BUGSoutput$sims.list
+su = post.lear$BUGSoutput$summary
 
 #Show summary
 View(su)
@@ -480,68 +483,70 @@ lines(ts.ages[1:(ts.len - 1)], dv, col="red")
 
 #####
 ###Now let's try to Shackelton site
-d.i = read.table("Birner_2016/datasets/339-U1385_isotope_toRead.tab", sep = "\t", header = TRUE)
-d.e = read.table("Birner_2016/datasets/339-U1385_Mg-Ca_toRead.tab", sep = "\t", header = TRUE)
-plot(d.e$Age..ka.BP., d.e$U..peregerina.Mg.Ca..mmol.mol.)
-plot(d.i$Age..ka.BP., d.i$C..wuellerstorfi.d18O..per.mil.PDB.)
+d = read.csv("birner_2016.csv")
 
 ##Set up timeseries for d18O_sw and BWT modeling
-ts.min.s = 1320
-ts.max.s = 1235
-ts.step.s = 1
-ts.ages.s = seq(ts.min.s, ts.max.s, -ts.step.s)
-ts.len.s = length(ts.ages.s)
+ts.min = 1320
+ts.max = 1235
+ts.step = 1
+ts.ages = seq(ts.min, ts.max, -ts.step)
+ts.len = length(ts.ages)
 
 #prep the d18O data and add age indicies
-d_o.s = d.i[!is.na(d.i$C..wuellerstorfi.d18O..per.mil.PDB.), ]
-o_age.ind.s = round((ts.min.s - d_o.s$Age..ka.BP.) / ts.step.s) + 1
+d_o = d[!is.na(d$d18O), ]
+o_age.ind = round((ts.min - d_o$Age_ka) / ts.step) + 1
 
 #prep the MgCa data and add age indicies
-d_mgca.s = d.e[!is.na(d.e$U..peregerina.Mg.Ca..mmol.mol.),]
-mgca_age.ind.s = round((ts.min.s - d_mgca.s$Age..ka.BP.) / ts.step.s) + 1
+d_mgca = d[!is.na(d$MgCa),]
+mgca_age.ind = round((ts.min - d_mgca$Age_ka) / ts.step) + 1
 
 #U spp calibration data from Elderfield 2012 compilation
-d_mgca_calib.u = read.csv("u_mgca_calib.csv")
+d_mgca_calib = read.csv("U_mgca_calib.csv")
 
 ##Read in d18O calibration dataset
-d_d18O_calib = read.csv("C_comp.csv")
+d_d18O_calib = read.csv("C_d18O_calib.csv")
 d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
 #get distributions of sw Mg/Ca from long model - not needed for U spp dataset
-load("mg_post.RData") #uses output from MgCa_sw_model.R
-plotd(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,52:58])
-mgca_sw_m.paleo = mean(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,52:58])
-mgca_sw_sd.paleo = sd(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,52:58])
+load("post_mg.RData") #uses output from MgCa_sw_model.R
+plotd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,52:58])
+mgca_sw_m.paleo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,52:58])
+mgca_sw_sd.paleo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,52:58])
 mgca_sw_paleo = c(mgca_sw_m.paleo, mgca_sw_sd.paleo)
 
-plotd(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
-mgca_sw_m.neo = mean(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
-mgca_sw_sd.neo = sd(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
+plotd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
 mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
 
 ##Parameters to be saved
 parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18O_sw.pre", 
-               "lc", "MgCa_calib.pre", "a", "d18O_calib.pre")
+               "a", "MgCa_calib.pre", "b", "d18O_calib.pre")
 
 ##Data to pass to the model
-dat = list(nages = ts.len.s,
-           MgCa_calib.bwt.m = d_mgca_calib.u$BWT, MgCa_calib.bwt.sd = rep(0.2, nrow(d_mgca_calib.u)), MgCa_calib = d_mgca_calib.u$MgCa,
-           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$C.SW_d18O,
+dat = list(nages = ts.len,
+           MgCa_calib.bwt.m = d_mgca_calib$BWT, MgCa_calib.bwt.sd = d_mgca_calib$BWT_sd, MgCa_calib = d_mgca_calib$MgCa,
+           d18O_calib.bwt.m = d_d18O_calib$BWT, d18O_calib.bwt.sd = d_d18O_calib$BWT_sd, d18O_calib = d_d18O_calib$d18O_f.sw,
            MgCa_sw.neo = mgca_sw_neo,
-           MgCa.age.ind = mgca_age.ind.s, MgCa = d_mgca.s$U..peregerina.Mg.Ca..mmol.mol., 
-           d18O.age.ind = o_age.ind.s, d18O = d_o.s$C..wuellerstorfi.d18O..per.mil.PDB.)
+           MgCa.age.ind = mgca_age.ind, MgCa = d_mgca$MgCa, 
+           d18O.age.ind = o_age.ind, d18O = d_o$d18O)
 
-##Run the inversion
+##Run the inversion - 50 min for 500k samples
 t1 = proc.time()
 set.seed(t1[3])
-post = jags.parallel(model.file = "split_temporal_birk.R", parameters.to.save = parameters, 
-                      data = dat, n.chains=3, n.iter = 250000, 
-                      n.burnin = 5000, n.thin = 25) 
+n.iter = 500000
+n.burnin = 10000
+n.thin = floor(n.iter-n.burnin)/5000
+post.birn = do.call(jags.parallel, list(model.file = "split_temporal_birn.R", parameters.to.save = parameters, 
+                      data = dat, n.chains=3, n.iter = n.iter, 
+                      n.burnin = n.burnin, n.thin = n.thin))
 proc.time() - t1
 
+save(post.birn, file = "post_birn.RData")
+
 #Shorthand
-sl = post$BUGSoutput$sims.list
-su = post$BUGSoutput$summary
+sl = post.birn$BUGSoutput$sims.list
+su = post.birn$BUGSoutput$summary
 
 #Show summary
 View(su)
@@ -556,174 +561,230 @@ png("T_18O_bir.png", units="in", width=5, height=5, res=300)
 layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.1*2.54), lcm(2.9*2.54)))
 par(mai=c(0.2,1,0.2,0.2), cex=0.85)
 plot(-10, 0, xlab = "", ylab = expression("BWT ("*degree*" C)"),
-     xlim=c(1230,1320), ylim=c(-1,6), axes = FALSE)
+     xlim=c(1239,1320), ylim=c(-0.5,6.5), axes = FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+  lines(ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages.s, su[BWT.start:(BWT.start + ts.len.s - 1), 5], col="red")
-lines(ts.ages.s, su[BWT.start:(BWT.start + ts.len.s - 1), 3], col="red", lty=3)
-lines(ts.ages.s, su[BWT.start:(BWT.start + ts.len.s - 1), 7], col="red", lty=3)
-#lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 4], col="red", lty=2)
-#lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 6], col="red", lty=2)
-tp = d_mgca.s[order(d_mgca.s$Age..ka.BP.), "Age..ka.BP."]
-points(tp, rep(-1, nrow(d_mgca.s)), pch=21, bg = "white")
+lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 5], col="red")
+lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 3], col="red", lty=3)
+lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 7], col="red", lty=3)
+tp = d_mgca[order(d_mgca$Age_ka), "Age_ka"]
+points(tp, rep(-0.5, nrow(d_mgca)), pch=21, bg = "white")
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
 
 #Second panel for seawater d18O
 par(mai=c(1,1,0.2,0.2))
-plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-     xlim=c(1230,1320), ylim=c(1.5,-0.25))
+plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
+     xlim=c(1239,1320), ylim=c(1.6,0))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
+  lines(ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages.s, su[d18O.start:(d18O.start+ts.len.s-1), 5], col="red")
-lines(ts.ages.s, su[d18O.start:(d18O.start+ts.len.s-1), 3], col="red", lty=3)
-lines(ts.ages.s, su[d18O.start:(d18O.start+ts.len.s-1), 7], col="red", lty=3)
-#lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 4], col="red", lty=2)
-#lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 6], col="red", lty=2)
-op = d_o.s[order(d_o.s$Age..ka.BP.),"Age..ka.BP."]
-points(op, rep(1.5, nrow(d_o.s)), pch=21, bg = "white")
+lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 5], col="red")
+lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
+lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
+op = d_o[order(d_o$Age_ka),"Age_ka"]
+points(op, rep(1.6, nrow(d_o)), pch=21, bg = "white")
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")
 
 dev.off()
 
-###Now the Elderfield big record ~ turns out this is too heavy for full simulation
+###Now the Elderfield record
 
+#read data
 d = read.csv("elderfield_2012.csv")
 
+#subset desired age range
+d = d[d$Age_ka > 1235,]
+d = d[d$Age_ka < 1320,]
+
 ##Set up timeseries for d18O_sw and BWT modeling
-ts.min.s = 1550
-ts.max.s = 5
-ts.step.s = 5
-ts.ages.s = seq(ts.min.s, ts.max.s, -ts.step.s)
-ts.len.s = length(ts.ages.s)
+ts.min = 1320
+ts.max = 1235
+ts.step = 1
+ts.ages = seq(ts.min, ts.max, -ts.step)
+ts.len = length(ts.ages)
 
 #prep the d18O data and add age indicies
-d_o.s = d[!is.na(d$d18O), ]
-o_age.ind.s = round((ts.min.s - d_o.s$Age_ka) / ts.step.s) + 1
+d_o = d[!is.na(d$d18O), ]
+o_age.ind = round((ts.min - d_o$Age_ka) / ts.step) + 1
 
 #prep the MgCa data and add age indicies
-d_mgca.s = d[!is.na(d$MgCa),] 
-mgca_age.ind.s = round((ts.min.s - d_mgca.s$Age_ka) / ts.step.s) + 1
+d_mgca = d[!is.na(d$MgCa),] 
+mgca_age.ind = round((ts.min - d_mgca$Age_ka) / ts.step) + 1
 
 #U spp calibration data from Elderfield 2012 compilation
-d_mgca_calib.u = read.csv("u_mgca_calib.csv")
+d_mgca_calib = read.csv("U_mgca_calib.csv")
 
-##Read in d18O calibration dataset
-d_d18O_calib = read.csv("C_comp.csv")
+##Read in d18O calibration dataset from Marchitto 2014 compilation
+d_d18O_calib = read.csv("U_d18O_calib.csv")
 d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
 #get distributions of sw Mg/Ca from long model
-load("mg_post.RData") #uses output from MgCa_sw_model.R
-
-mgca_sw_m.neo = mean(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
-mgca_sw_sd.neo = sd(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
+load("post_mg.RData") #uses output from MgCa_sw_model.R
+mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
 mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
 
 ##Parameters to be saved
 parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18O_sw.pre", 
-               "lc", "MgCa_calib.pre", "a", "d18O_calib.pre")
+               "a", "MgCa_calib.pre", "b", "d18O_calib.pre")
 
 ##Data to pass to the model
-dat = list(nages = ts.len.s,
-           MgCa_calib.bwt.m = d_mgca_calib.u$BWT, MgCa_calib.bwt.sd = rep(0.2, nrow(d_mgca_calib.u)), MgCa_calib = d_mgca_calib.u$MgCa,
-           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$C.SW_d18O,
+dat = list(nages = ts.len,
+           MgCa_calib.bwt.m = d_mgca_calib$BWT, MgCa_calib.bwt.sd = d_mgca_calib$BWT_sd, MgCa_calib = d_mgca_calib$MgCa,
+           d18O_calib.bwt.m = d_d18O_calib$BWT, d18O_calib.bwt.sd = d_d18O_calib$BWT_sd, d18O_calib = d_d18O_calib$d18O_f.sw,
            MgCa_sw.neo = mgca_sw_neo,
-           MgCa.age.ind = mgca_age.ind.s, MgCa = d_mgca.s$MgCa, 
-           d18O.age.ind = o_age.ind.s, d18O = d_o.s$d18O)
+           MgCa.age.ind = mgca_age.ind, MgCa = d_mgca$MgCa, 
+           d18O.age.ind = o_age.ind, d18O = d_o$d18O)
 
-##Run the inversion
+##Run the inversion - 50 min for 500k samples
 t1 = proc.time()
 set.seed(t1[3])
-post = jags(model.file = "split_temporal_elderfield.R", parameters.to.save = parameters, 
-                     data = dat, n.chains=3, n.iter = 2500, 
-                     n.burnin = 500, n.thin = 25) 
+n.iter = 500000
+n.burnin = 10000
+n.thin = floor(n.iter-n.burnin)/5000
+post.elder = do.call(jags.parallel, list(model.file = "split_temporal_elder.R", parameters.to.save = parameters, 
+                                   data = dat, n.chains=3, n.iter = n.iter, 
+                                   n.burnin = n.burnin, n.thin = n.thin))
 proc.time() - t1
 
+save(post.elder, file = "post_elder.RData")
+
 #Shorthand
-sl = post$BUGSoutput$sims.list
-su = post$BUGSoutput$summary
+sl = post.elder$BUGSoutput$sims.list
+su = post.elder$BUGSoutput$summary
 
 #Show summary
 View(su)
 
+#Get some indicies
+sims = nrow(sl$BWT)
+BWT.start = match("BWT[1]", row.names(su))
+d18O.start = match("d18O_sw[1]", row.names(su))
+
+##A couple of standard plots of the modeled timeseries
+png("T_18O_eld.png", units="in", width=5, height=5, res=300)
+layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.1*2.54), lcm(2.9*2.54)))
+par(mai=c(0.2,1,0.2,0.2), cex=0.85)
+plot(-10, 0, xlab = "", ylab = expression("BWT ("*degree*" C)"),
+     xlim=c(1239,1315), ylim=c(-3,4), axes = FALSE)
+axis(1, labels=FALSE)
+axis(2)
+box()
+for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
+  lines(ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+}
+lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 5], col="red")
+lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 3], col="red", lty=3)
+lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 7], col="red", lty=3)
+tp = d_mgca[order(d_mgca$Age_ka), "Age_ka"]
+points(tp, rep(-3, nrow(d_mgca)), pch=21, bg = "white")
+xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "A")
+
+#Second panel for seawater d18O
+par(mai=c(1,1,0.2,0.2))
+plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
+     xlim=c(1239,1315), ylim=c(1.0,-0.6))
+for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
+  lines(ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
+}
+lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 5], col="red")
+lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
+lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
+op = d_o[order(d_o$Age_ka),"Age_ka"]
+points(op, rep(1, nrow(d_o)), pch=21, bg = "white")
+xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "B")
+
+dev.off()
+
 
 #####
 ###Now Shackelton site and 1123 together
-d.b.i = read.table("Birner_2016/datasets/339-U1385_isotope_toRead.tab", sep = "\t", header = TRUE)
-d.b.e = read.table("Birner_2016/datasets/339-U1385_Mg-Ca_toRead.tab", sep = "\t", header = TRUE)
+d.b = read.csv("birner_2016.csv")
 
 d.e = read.csv("elderfield_2012.csv")
 d.e = d.e[d.e$Age_ka > 1235,]
 d.e = d.e[d.e$Age_ka < 1320,]
 
 ##Set up timeseries for d18O_sw and BWT modeling
-ts.min.s = 1320
-ts.max.s = 1235
-ts.step.s = 1
-ts.ages.s = seq(ts.min.s, ts.max.s, -ts.step.s)
-ts.len.s = length(ts.ages.s)
+ts.min = 1320
+ts.max = 1235
+ts.step = 1
+ts.ages = seq(ts.min, ts.max, -ts.step)
+ts.len = length(ts.ages)
 
 #prep the d18O data and add age indicies
-d_o.b = d.b.i[!is.na(d.b.i$C..wuellerstorfi.d18O..per.mil.PDB.), ]
-o_age.ind.b = round((ts.min.s - d_o.b$Age..ka.BP.) / ts.step.s) + 1
+d_o.b = d.b[!is.na(d.b$d18O), ]
+o_age.ind.b = round((ts.min - d_o.b$Age_ka) / ts.step) + 1
 d_o.e = d.e[!is.na(d.e$d18O), ]
-o_age.ind.e = round((ts.min.s - d_o.e$Age_ka) / ts.step.s) + 1
+o_age.ind.e = round((ts.min - d_o.e$Age_ka) / ts.step) + 1
 
 #prep the MgCa data and add age indicies
-d_mgca.b = d.b.e[!is.na(d.b.e$U..peregerina.Mg.Ca..mmol.mol.),]
-mgca_age.ind.b = round((ts.min.s - d_mgca.b$Age..ka.BP.) / ts.step.s) + 1
+d_mgca.b = d.b[!is.na(d.b$MgCa),]
+mgca_age.ind.b = round((ts.min - d_mgca.b$Age_ka) / ts.step) + 1
 d_mgca.e = d.e[!is.na(d.e$MgCa),] 
-mgca_age.ind.e = round((ts.min.s - d_mgca.e$Age_ka) / ts.step.s) + 1
+mgca_age.ind.e = round((ts.min - d_mgca.e$Age_ka) / ts.step) + 1
 
 #U spp calibration data from Elderfield 2012 compilation
-d_mgca_calib.u = read.csv("u_mgca_calib.csv")
+d_mgca_calib = read.csv("U_mgca_calib.csv")
 
-##Read in d18O calibration dataset
-d_d18O_calib = read.csv("C_comp.csv")
-d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
+##Read in d18O calibration datasets for both genera
+d_d18O_calib.u = read.csv("U_d18O_calib.csv")
+d_d18O_calib.u = d_d18O_calib.u[is.na(d_d18O_calib.u$Ignore),]
+
+d_d18O_calib.c = read.csv("C_d18O_calib.csv")
+d_d18O_calib.c = d_d18O_calib.c[is.na(d_d18O_calib.c$Ignore),]
 
 #get distribution of sw Mg/Ca for early Pleistocene from long model
-load("mg_post.RData") #uses output from MgCa_sw_model.R
-mgca_sw_m.neo = mean(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
-mgca_sw_sd.neo = sd(mg_post$BUGSoutput$sims.list$MgCa_sw_m[,110])
+load("post_mg.RData") #uses output from MgCa_sw_model.R
+mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
 mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
 
 ##Parameters to be saved
 parameters = c("d18O_sw.b", "BWT.b", "d18O_sw.e", "BWT.e", 
                "BWT.b.eps.ac", "BWT.b.pre", "d18O_sw.b.eps.ac", "d18O_sw.b.pre", 
                "BWT.e.eps.ac", "BWT.e.pre", "d18O_sw.e.eps.ac", "d18O_sw.e.pre", 
-               "lc", "MgCa_calib.pre", "a", "d18O_calib.pre")
+               "a", "MgCa_calib.pre", "b.c", "b.u", "d18O_calib.c.pre", "d18O_calib.u.pre")
 
 ##Data to pass to the model
-dat = list(nages = ts.len.s,
-           MgCa_calib.bwt.m = d_mgca_calib.u$BWT, MgCa_calib.bwt.sd = rep(0.2, nrow(d_mgca_calib.u)), MgCa_calib = d_mgca_calib.u$MgCa,
-           d18O_calib.bwt.m = d_d18O_calib$Temperature_C, d18O_calib.bwt.sd = rep(0.2,nrow(d_d18O_calib)), d18O_calib = d_d18O_calib$C.SW_d18O,
+dat = list(nages = ts.len,
+           MgCa_calib.bwt.m = d_mgca_calib$BWT, MgCa_calib.bwt.sd = d_mgca_calib$BWT_sd, MgCa_calib = d_mgca_calib$MgCa,
+           d18O_calib.u.bwt.m = d_d18O_calib.u$BWT, d18O_calib.u.bwt.sd = d_d18O_calib.u$BWT_sd, d18O_calib.u = d_d18O_calib.u$d18O_f.sw,
+           d18O_calib.c.bwt.m = d_d18O_calib.c$BWT, d18O_calib.c.bwt.sd = d_d18O_calib.c$BWT_sd, d18O_calib.c = d_d18O_calib.c$d18O_f.sw,
            MgCa_sw.neo = mgca_sw_neo,
-           MgCa.age.ind.b = mgca_age.ind.b, MgCa.b = d_mgca.b$U..peregerina.Mg.Ca..mmol.mol., 
-           d18O.age.ind.b = o_age.ind.b, d18O.b = d_o.b$C..wuellerstorfi.d18O..per.mil.PDB.,
+           MgCa.age.ind.b = mgca_age.ind.b, MgCa.b = d_mgca.b$MgCa, 
+           d18O.age.ind.b = o_age.ind.b, d18O.b = d_o.b$d18O,
            MgCa.age.ind.e = mgca_age.ind.e, MgCa.e = d_mgca.e$MgCa,
            d18O.age.ind.e = o_age.ind.e, d18O.e = d_o.e$d18O)
 
-##Run the inversion ~ 1 hour
+##Run the inversion ~ 1 hour for 100k sims
 t1 = proc.time()
 set.seed(t1[3])
-post = jags.parallel(model.file = "split_temporal_multi.R", parameters.to.save = parameters, 
-                     data = dat, n.chains=3, n.iter = 100000, 
-                     n.burnin = 5000, n.thin = 10) 
+n.iter = 750000
+n.burnin = 10000
+n.thin = floor((n.iter - n.burnin) / 5000)
+post.multi = do.call(jags.parallel, list(model.file = "split_temporal_multi.R", parameters.to.save = parameters, 
+                     data = dat, n.chains=3, n.iter = n.iter, 
+                     n.burnin = n.burnin, n.thin = n.thin))
 proc.time() - t1
 
+save(post.multi, file="post_multi.RData")
 
 #Shorthand
-sl = post$BUGSoutput$sims.list
-su = post$BUGSoutput$summary
+sl = post.multi$BUGSoutput$sims.list
+su = post.multi$BUGSoutput$summary
 
 #Show summary
 View(su)
@@ -740,52 +801,50 @@ png("T_18O_multi.png", units="in", width=5, height=5, res=300)
 layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.1*2.54), lcm(2.9*2.54)))
 par(mai=c(0.2,1,0.2,0.2), cex=0.85)
 plot(-10, 0, xlab = "", ylab = expression("BWT ("*degree*" C)"),
-     xlim=c(1240,1315), ylim=c(-3,8), axes = FALSE)
+     xlim=c(1239,1315), ylim=c(-3,8), axes = FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, sl$BWT.b[i,], col = rgb(0.5,0,0, 0.01))
+  lines(ts.ages, sl$BWT.b[i,], col = rgb(0.5,0,0, 0.01))
 }
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, sl$BWT.e[i,], col = rgb(0,0,0.5, 0.01))
+  lines(ts.ages, sl$BWT.e[i,], col = rgb(0,0,0.5, 0.01))
 }
-lines(ts.ages.s, su[BWT.b.start:(BWT.b.start + ts.len.s - 1), 5], col="red")
-lines(ts.ages.s, su[BWT.b.start:(BWT.b.start + ts.len.s - 1), 3], col="red", lty=3)
-lines(ts.ages.s, su[BWT.b.start:(BWT.b.start + ts.len.s - 1), 7], col="red", lty=3)
-lines(ts.ages.s, su[BWT.e.start:(BWT.e.start + ts.len.s - 1), 5], col=rgb(0.2,0.2,1))
-lines(ts.ages.s, su[BWT.e.start:(BWT.e.start + ts.len.s - 1), 3], col=rgb(0.2,0.2,1), lty=3)
-lines(ts.ages.s, su[BWT.e.start:(BWT.e.start + ts.len.s - 1), 7], col=rgb(0.2,0.2,1), lty=3)
-#lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 4], col="red", lty=2)
-#lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 6], col="red", lty=2)
+lines(ts.ages, su[BWT.b.start:(BWT.b.start + ts.len - 1), 5], col="red")
+lines(ts.ages, su[BWT.b.start:(BWT.b.start + ts.len - 1), 3], col="red", lty=3)
+lines(ts.ages, su[BWT.b.start:(BWT.b.start + ts.len - 1), 7], col="red", lty=3)
+lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 5], col=rgb(0.2,0.2,1))
+lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 3], col=rgb(0.2,0.2,1), lty=3)
+lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 7], col=rgb(0.2,0.2,1), lty=3)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
 
 #Second panel for seawater d18O
 par(mai=c(1,1,0.2,0.2))
-plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-     xlim=c(1240,1315), ylim=c(1.75,0))
+plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
+     xlim=c(1239,1315), ylim=c(1.75,0))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, sl$d18O_sw.b[i,], col = rgb(0.5,0,0, 0.01))
+  lines(ts.ages, sl$d18O_sw.b[i,], col = rgb(0.5,0,0, 0.01))
 }
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, sl$d18O_sw.e[i,], col = rgb(0,0,0.5, 0.01))
+  lines(ts.ages, sl$d18O_sw.e[i,], col = rgb(0,0,0.5, 0.01))
 }
-lines(ts.ages.s, su[d18O.b.start:(d18O.b.start+ts.len.s-1), 5], col="red")
-lines(ts.ages.s, su[d18O.b.start:(d18O.b.start+ts.len.s-1), 3], col="red", lty=3)
-lines(ts.ages.s, su[d18O.b.start:(d18O.b.start+ts.len.s-1), 7], col="red", lty=3)
-lines(ts.ages.s, su[d18O.e.start:(d18O.e.start+ts.len.s-1), 5], col=rgb(0.2,0.2,1))
-lines(ts.ages.s, su[d18O.e.start:(d18O.e.start+ts.len.s-1), 3], col=rgb(0.2,0.2,1), lty=3)
-lines(ts.ages.s, su[d18O.e.start:(d18O.e.start+ts.len.s-1), 7], col=rgb(0.2,0.2,1), lty=3)
-#lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 4], col="red", lty=2)
-#lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 6], col="red", lty=2)
+lines(ts.ages, su[d18O.b.start:(d18O.b.start+ts.len-1), 5], col="red")
+lines(ts.ages, su[d18O.b.start:(d18O.b.start+ts.len-1), 3], col="red", lty=3)
+lines(ts.ages, su[d18O.b.start:(d18O.b.start+ts.len-1), 7], col="red", lty=3)
+lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 5], col=rgb(0.2,0.2,1))
+lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 3], col=rgb(0.2,0.2,1), lty=3)
+lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 7], col=rgb(0.2,0.2,1), lty=3)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")
 
 dev.off()
 
+##Calculate paired difference between BWT samples for two records
+#Get quantile value for zero difference
 BWT.delta = sl$BWT.b - sl$BWT.e
 BWT.ptiles = matrix(double(), ncol = ncol(BWT.delta), nrow = 4)
 for(j in 1:ncol(BWT.delta)){
@@ -794,6 +853,8 @@ for(j in 1:ncol(BWT.delta)){
   BWT.ptiles[4,j] = tst(0)
 }
 
+##Calculate paired difference between d18O_sw samples for two records
+#Get quantile value for zero difference
 d18O_sw.delta = sl$d18O_sw.b - sl$d18O_sw.e
 d18O_sw.ptiles = matrix(double(), ncol = ncol(d18O_sw.delta), nrow = 4)
 for(j in 1:ncol(d18O_sw.delta)){
@@ -802,29 +863,30 @@ for(j in 1:ncol(d18O_sw.delta)){
   d18O_sw.ptiles[4,j] = tst(0)
 }
 
+##Plot differences and quantile values of zero difference
 plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
      xlim=c(1240,1315), ylim=c(0,8))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, BWT.delta[i,], col = rgb(0,0,0, 0.01))
+  lines(ts.ages, BWT.delta[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages.s, BWT.ptiles[2,], col="red")
-lines(ts.ages.s, BWT.ptiles[1,], col="red", lty=3)
-lines(ts.ages.s, BWT.ptiles[3,], col="red", lty=3)
+lines(ts.ages, BWT.ptiles[2,], col="red")
+lines(ts.ages, BWT.ptiles[1,], col="red", lty=3)
+lines(ts.ages, BWT.ptiles[3,], col="red", lty=3)
 par(new = TRUE)
-plot(ts.ages.s, pmax(BWT.ptiles[4,],1e-4), type="l", log="y", axes = FALSE, 
+plot(ts.ages, pmax(BWT.ptiles[4,],1e-4), type="l", log="y", axes = FALSE, 
      ylim=c(5e-3,5e-1), xlab="", ylab="")
 axis(4, at=c(5e-3,5e-2,5e-1))
 
 plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
      xlim=c(1240,1315), ylim=c(-1,1))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages.s, d18O_sw.delta[i,], col = rgb(0,0,0, 0.01))
+  lines(ts.ages, d18O_sw.delta[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages.s, d18O_sw.ptiles[2,], col="red")
-lines(ts.ages.s, d18O_sw.ptiles[1,], col="red", lty=3)
-lines(ts.ages.s, d18O_sw.ptiles[3,], col="red", lty=3)
+lines(ts.ages, d18O_sw.ptiles[2,], col="red")
+lines(ts.ages, d18O_sw.ptiles[1,], col="red", lty=3)
+lines(ts.ages, d18O_sw.ptiles[3,], col="red", lty=3)
 par(new = TRUE)
-plot(ts.ages.s, pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), type="l", log="y", 
+plot(ts.ages, pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), type="l", log="y", 
      axes = FALSE, xlim=c(1240,1315), ylim=c(5e-3,5e-1), xlab="", ylab="")
 axis(4, at=c(5e-3,5e-2,5e-1))
 lines(c(1230,1320), c(0.05,0.05), lty=2)

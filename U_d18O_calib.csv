@@ -1,0 +1,73 @@
+ID,BWT,BWT_sd,d18O_sw,d18O_f,d18O_f-sw,Species,Ignore,Source
+110,17.3,0.2,1.03,0.96,0.2,pergirina,,Marchitto 2014
+134,17.2,0.2,1.02,1.08,0.33,pergirina,,Marchitto 2014
+92,15.7,0.2,0.89,1.09,0.47,pergirina,,Marchitto 2014
+138,16.8,0.2,0.98,1.16,0.45,pergirina,,Marchitto 2014
+118,14.5,0.2,0.85,1.25,0.67,pergirina,,Marchitto 2014
+79,12.1,0.2,0.57,1.38,1.08,pergirina,,Marchitto 2014
+121,11.9,0.2,0.56,1.52,1.23,pergirina,,Marchitto 2014
+72,10.8,0.2,0.47,1.56,1.36,pergirina,,Marchitto 2014
+76,11,0.2,0.56,1.66,1.37,pergirina,,Marchitto 2014
+103,9.3,0.2,0.38,1.81,1.7,pergirina,,Marchitto 2014
+13,9.7,0.2,0.39,1.87,1.75,pergirina,,Marchitto 2014
+55,9.1,0.2,0.36,1.91,1.82,pergirina,,Marchitto 2014
+53,10,0.2,0.41,1.96,1.82,pergirina,,Marchitto 2014
+22,9,0.2,0.35,2.03,1.95,pergirina,,Marchitto 2014
+5,8.5,0.2,0.31,2.18,2.14,pergirina,,Marchitto 2014
+24,7.8,0.2,0.28,2.24,2.23,pergirina,,Marchitto 2014
+62,7,0.2,0.26,2.39,2.4,pergirina,,Marchitto 2014
+28,6.3,0.2,0.26,2.43,2.44,pergirina,,Marchitto 2014
+11,5.8,0.2,0.26,2.49,2.5,pergirina,,Marchitto 2014
+84G4-13,18.5,0.2,0.9,-0.02,-0.65,flintii,1,Grossman 1986
+83G3-17,16.9,0.2,0.9,1.02,0.39,flintii,,Grossman 1986
+83G3-17,16.9,0.2,0.9,1,0.37,flintii,,Grossman 1986
+84G4-14,15.3,0.2,0.8,1.12,0.59,flintii,,Grossman 1986
+84G4-14,15.3,0.2,0.8,0.97,0.44,flintii,,Grossman 1986
+84G3-3,15,0.2,0.5,1.87,1.64,pergirina,1,Grossman 1986
+84G2-16,13,0.2,0.5,1.43,1.2,flintii,,Grossman 1986
+G85-4-1,12,0.2,0.3,1.05,1.02,pergirina,,Grossman 1986
+83G3-4,8.4,0.2,0.1,2.3,2.47,pergirina,,Grossman 1986
+29596,6.8,0.2,-0.3,2.3,2.87,curticosa,,Grossman 1986
+29596,6.8,0.2,-0.3,2.4,2.97,curticosa,,Grossman 1986
+82729,6.4,0.2,-0.3,2.47,3.04,curticosa,,Grossman 1986
+83G3-12,6.1,0.2,0,2.4,2.67,pergirina,,Grossman 1986
+83G3-12,6.1,0.2,0,2.75,3.02,pergirina,,Grossman 1986
+83G3-6,5.5,0.2,0,2.9,3.17,pergirina,,Grossman 1986
+81429-31,4.3,0.2,-0.2,2.97,3.44,curticosa,,Grossman 1986
+81429-31,4.3,0.2,-0.2,2.86,3.33,curticosa,,Grossman 1986
+26971,3.9,0.2,-0.2,3.02,3.49,curticosa,,Grossman 1986
+26971,3.9,0.2,-0.2,2.96,3.43,curticosa,,Grossman 1986
+26971,3.9,0.2,-0.2,2.87,3.34,curticosa,,Grossman 1986
+26971,3.9,0.2,-0.2,2.97,3.44,pergirina,,Grossman 1986
+29619,2.7,0.2,-0.3,3.24,3.81,pergirina,,Grossman 1986
+29620,2.6,0.2,-0.3,3.01,3.58,curticosa,,Grossman 1986
+NesGGC-27,2.28,0.2,-0.19,2.95,3.41,,,Keigwin 1998
+Nes BC-32,2.31,0.2,-0.17,3.33,3.77,,,Keigwin 1998
+B34-91,2.27,0.2,-0.13,3.25,3.65,,,Keigwin 1998
+NesGGC-20,2.13,0.2,-0.1,3.15,3.52,,,Keigwin 1998
+Vema32161,2.1,0.2,-0.09,3.16,3.52,,,Keigwin 1998
+NesGGC-18,2.08,0.2,-0.08,3.19,3.54,,,Keigwin 1998
+NesGGC-15,1.97,0.2,-0.07,3.21,3.55,,,Keigwin 1998
+RNDB GGC-26,1.74,0.2,-0.04,3.21,3.52,,,Keigwin 1998
+RNDBGGC-1,1.72,0.2,-0.04,3.25,3.56,,,Keigwin 1998
+RNDBGGC-2,1.69,0.2,-0.04,3.24,3.55,,,Keigwin 1998
+RNDBGGC-3,1.66,0.2,-0.03,3.22,3.52,,,Keigwin 1998
+RNDB GGC-27,1.64,0.2,-0.03,3.31,3.61,,,Keigwin 1998
+RNDBGGC-5,1.62,0.2,-0.03,3.36,3.66,,,Keigwin 1998
+RNDBGGC-6,1.59,0.2,-0.03,3.07,3.37,,,Keigwin 1998
+Vinogr BC-26,1.57,0.2,-0.03,3.26,3.56,,,Keigwin 1998
+RAMAPC-44,1.57,0.2,-0.03,3.29,3.59,,,Keigwin 1998
+RNDBGGC-7,1.56,0.2,-0.03,3.27,3.57,,,Keigwin 1998
+RNDBGGC-8,1.55,0.2,-0.03,3.29,3.59,,,Keigwin 1998
+RNDB PC-11,1.53,0.2,-0.03,3.32,3.62,,,Keigwin 1998
+RNDB GGC-ll,1.525,0.2,-0.03,3.41,3.71,,,Keigwin 1998
+Vinogr GGC-37,1.525,0.2,-0.03,3.31,3.61,,,Keigwin 1998
+RNDBGG12,1.52,0.2,-0.02,3.13,3.42,,,Keigwin 1998
+RNDBGGC-13,1.505,0.2,-0.02,3.68,3.97,,,Keigwin 1998
+RNDBGGC-14,1.5,0.2,-0.02,3.26,3.55,,,Keigwin 1998
+RNDB GGC-16,1.5,0.2,-0.02,3.46,3.75,,,Keigwin 1998
+Vinogr GGC-17,1.5,0.2,-0.02,3.36,3.65,,,Keigwin 1998
+Vinogr GGC-17,1.5,0.2,-0.02,3.36,3.65,,,Keigwin 1998
+V21-30,7,0.2,-0.3,2.108,2.678,,,Shackleton 1974
+RC11-120,0.8,0.2,-0.4,3.596666667,4.266666667,,,Shackleton 1974
+Box Core 2,1.3,0.2,-0.4,3.347,4.017,,,Shackleton 1974
