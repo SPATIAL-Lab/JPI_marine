@@ -156,7 +156,9 @@ lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 7], col="red", lty
 #lines(mgca_ts.ages, su[MgCa.start:(MgCa.start+mgca_ts.len-1), 6], col="red", lty=2)
 points(d_mgca_sw$Age, d_mgca_sw$MgCa, pch=21, bg = "white")
 points(d_mgca$Age.Ma, rep(1, nrow(d_mgca)), pch=21, bg = "black")
-points(d_mgca_calib$Age, rep(1, nrow(d_mgca_calib)), pch=21, bg = "grey")
+calib_ages = d_mgca_calib$Age
+calib_ages = calib_ages[calib_ages>0]
+points(calib_ages, rep(1, length(calib_ages)), pch=21, bg = "grey")
 dev.off()
 
 ##Plotting priors and posteriors
@@ -169,21 +171,21 @@ par(mai=c(0.5,0.5,0.1,0.1))
 xoff = 2.3
 
 #MgCa calibration parms
-plotd(sl$lc[,1], col="red")
+plotd(sl$a[,1], col="red")
 lined(rnorm(100000, 1.5, 0.1))
 title(xlab=expression(paste(alpha[1])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
 
-plotd(sl$lc[,2], col="red", ylab="")
+plotd(sl$a[,2], col="red", ylab="")
 lined(rnorm(100000, 0.1, 0.01))
 title(xlab=expression(paste(alpha[2])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")
 
-plotd(sl$lc[,3], col="red", ylab="")
+plotd(sl$a[,3], col="red", ylab="")
 lined(rnorm(100000, -0.02, 0.03))
 title(xlab=expression(paste(alpha[3])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
@@ -198,21 +200,21 @@ yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "D")
 
 #d18O calibration parms
-plotd(sl$a[,1], col="red")
+plotd(sl$b[,1], col="red")
 lined(rnorm(100000, 3.32, 0.02))
 title(xlab=expression(paste(beta[1])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "E")
 
-plotd(sl$a[,2], col="red", ylab="")
+plotd(sl$b[,2], col="red", ylab="")
 lined(rnorm(100000, -0.237, 0.01))
 title(xlab=expression(paste(beta[2])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "F")
 
-plotd(sl$a[,3], col="red", ylab="")
+plotd(sl$b[,3], col="red", ylab="")
 lined(rnorm(100000, 0.001, 0.0005))
 title(xlab=expression(paste(beta[3])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
@@ -241,40 +243,40 @@ png("calibration_covar.png", res=300, units="in", width=6, height=4)
 layout(matrix(c(1,2,3,4,5,6), nrow=2, byrow=TRUE))
 par(mar=c(5,5,0.2,0.2))
 
-smoothScatter(sl$lc[,1], sl$lc[,2], xlab=expression(paste(alpha[1])), ylab=expression(paste(alpha[2])))
+smoothScatter(sl$a[,1], sl$a[,2], xlab=expression(paste(alpha[1])), ylab=expression(paste(alpha[2])))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
 
-smoothScatter(sl$lc[,1], sl$lc[,3], xlab=expression(paste(alpha[1])), ylab=expression(paste(alpha[3])))
+smoothScatter(sl$a[,1], sl$a[,3], xlab=expression(paste(alpha[1])), ylab=expression(paste(alpha[3])))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")
 
-smoothScatter(sl$lc[,2], sl$lc[,3], xlab=expression(paste(alpha[2])), ylab=expression(paste(alpha[3])))
+smoothScatter(sl$a[,2], sl$a[,3], xlab=expression(paste(alpha[2])), ylab=expression(paste(alpha[3])))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "C")
 
-smoothScatter(sl$a[,1], sl$a[,2], xlab=expression(paste(beta[1])), ylab=expression(paste(beta[2])))
+smoothScatter(sl$b[,1], sl$b[,2], xlab=expression(paste(beta[1])), ylab=expression(paste(beta[2])))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "D")
 
-smoothScatter(sl$a[,1], sl$a[,3], xlab=expression(paste(beta[1])), ylab=expression(paste(beta[3])))
+smoothScatter(sl$b[,1], sl$b[,3], xlab=expression(paste(beta[1])), ylab=expression(paste(beta[3])))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "E")
 
-smoothScatter(sl$a[,2], sl$a[,3], xlab=expression(paste(beta[2])), ylab=expression(paste(beta[3])))
+smoothScatter(sl$b[,2], sl$b[,3], xlab=expression(paste(beta[2])), ylab=expression(paste(beta[3])))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "F")
 
 dev.off()
 
-lc.cor = cor(sl$lc)
 a.cor = cor(sl$a)
+b.cor = cor(sl$b)
 
 smoothScatter(sl$BWT.pre, sl$BWT.eps.ac)
 smoothScatter(sl$d18O_sw.pre, sl$d18O_sw.eps.ac)
@@ -408,13 +410,15 @@ dev.off()
 #####
 ##Time series properties
 
+sl = post.lear$BUGSoutput$sims.list
+
 #Set it up
-png("timeseries.png", res=300, units="in", width = 6, height = 2)
-layout(matrix(c(1,2,3), ncol=3))
+png("timeseries.png", res=300, units="in", width = 6, height = 6)
+layout(matrix(seq(1,9), nrow=3, byrow = TRUE))
 par(mai = c(0.5,0.5,0.1,0.1))
 
 #BWT and d18O timeseries autocorrelation
-plotd(sl$BWT.eps.ac, col="red", ylim=c(0,20))
+plotd(sl$BWT.eps.ac, col="red", ylim=c(0,20), xlim=c(0,0.8))
 lined(sl$d18O_sw.eps.ac, col="red", lty=2)
 lines(c(0,0.4), c(2.5,2.5))
 title(xlab=expression(phi), line=xoff)
@@ -423,7 +427,7 @@ yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
 
 #BWT TS SD
-plotd(sqrt(1/sl$BWT.pre), col="red", ylab="")
+plotd(sqrt(1/sl$BWT.pre), col="red", ylab="", xlim=c(0.2,0.5))
 lined(sqrt(1/rgamma(100000, 20, 2)))
 title(xlab=expression(paste(sigma ["BWT"])), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
@@ -438,6 +442,59 @@ xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "C")
 
+#load multi
+sl = post.multi$BUGSoutput$sims.list
+
+#BWT and d18O timeseries autocorrelation
+plotd(sl$BWT.b.eps.ac, col="red", ylim=c(0,6), xlim=c(0,0.8))
+lined(sl$d18O_sw.b.eps.ac, col="red", lty=2)
+lines(c(0,0.8), c(2.5,2.5))
+title(xlab=expression(phi), line=xoff)
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "D")
+
+#BWT TS SD
+plotd(sqrt(1/sl$BWT.b.pre), col="red", ylab="", xlim=c(0.2,0.5))
+lined(sqrt(1/rgamma(100000, 20, 2)))
+title(xlab=expression(paste(sigma ["BWT"])), line=xoff)
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "E")
+
+#d18O TS SD
+plotd(sqrt(1/(sl$d18O_sw.b.pre)), col="red", ylab="", xlim = c(0.075, 0.21), lty=2)
+lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
+title(xlab=expression(sigma [paste(delta, "18Osw")]), line=xoff)
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "F")
+
+#BWT and d18O timeseries autocorrelation
+plotd(sl$BWT.e.eps.ac, col="red", ylim=c(0,6), xlim=c(0,0.8))
+lined(sl$d18O_sw.e.eps.ac, col="red", lty=2)
+lines(c(0,0.8), c(2.5,2.5))
+title(xlab=expression(phi), line=xoff)
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "G")
+
+#BWT TS SD
+plotd(sqrt(1/sl$BWT.e.pre), col="red", ylab="", xlim=c(0.2,0.5))
+lined(sqrt(1/rgamma(100000, 20, 2)))
+title(xlab=expression(paste(sigma ["BWT"])), line=xoff)
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "H")
+
+#d18O TS SD
+plotd(sqrt(1/(sl$d18O_sw.e.pre)), col="red", ylab="", xlim = c(0.075, 0.21), lty=2)
+lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
+title(xlab=expression(sigma [paste(delta, "18Osw")]), line=xoff)
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "I")
+
 dev.off()
 
 #####
@@ -446,7 +503,6 @@ dev.off()
 smoothScatter(sl$BWT.pre, sl$BWT.eps.ac)
 smoothScatter(sl$d18O_sw.pre, sl$d18O_sw.eps.ac)
 
-
 #MgCasw timeseries autocorrelation
 plotd(sl$MgCa_sw_m.eps.ac, xlab = "TS autocorrelation")
 
@@ -454,32 +510,6 @@ plotd(sl$MgCa_sw_m.eps.ac, xlab = "TS autocorrelation")
 plotd(sqrt(1/(sl$MgCa_sw_m.pre)), col="red")
 lined(sqrt(1/(rgamma(100000, 1000, 0.01))))
 
-##These are first stabs at plots showing derivatives for BWT, d18O_sw
-dv = double()
-plot(-1,-1,xlim=c(min(ts.ages),max(ts.ages)), ylim=c(-1.5,1.5))
-for(i in seq(1, sims, by = max(floor(sims / 3000),1))){
-  for(j in 1:(ts.len - 1)){
-    dv[j] = sl$BWT[i,j+1] - sl$BWT[i,j]
-  }
-  lines(ts.ages[1:(ts.len - 1)], dv, col = rgb(0,0,0, 0.01))
-}
-for(j in 1:(ts.len - 1)){
-  dv[j] = su[BWT.start+j,5] - su[BWT.start+j-1,5]
-}
-lines(ts.ages[1:(ts.len - 1)], dv, col="red")
-
-dv = double()
-plot(-1,-1,xlim=c(min(ts.ages),max(ts.ages)), ylim=c(-0.5,0.5))
-for(i in seq(1, sims, by = max(floor(sims / 3000),1))){
-  for(j in 1:(ts.len - 1)){
-    dv[j] = sl$d18O_sw[i,j+1] - sl$d18O_sw[i,j]
-  }
-  lines(ts.ages[1:(ts.len - 1)], dv, col = rgb(0,0,0, 0.01))
-}
-for(j in 1:(ts.len - 1)){
-  dv[j] = su[d18O.start+j,5] - su[d18O.start+j-1,5]
-}
-lines(ts.ages[1:(ts.len - 1)], dv, col="red")
 
 #####
 ###Now let's try to Shackelton site
@@ -809,14 +839,14 @@ for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(ts.ages, sl$BWT.b[i,], col = rgb(0.5,0,0, 0.01))
 }
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages, sl$BWT.e[i,], col = rgb(0,0,0.5, 0.01))
+  lines(ts.ages, sl$BWT.e[i,], col = rgb(0,0,1, 0.01))
 }
 lines(ts.ages, su[BWT.b.start:(BWT.b.start + ts.len - 1), 5], col="red")
 lines(ts.ages, su[BWT.b.start:(BWT.b.start + ts.len - 1), 3], col="red", lty=3)
 lines(ts.ages, su[BWT.b.start:(BWT.b.start + ts.len - 1), 7], col="red", lty=3)
-lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 5], col=rgb(0.2,0.2,1))
-lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 3], col=rgb(0.2,0.2,1), lty=3)
-lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 7], col=rgb(0.2,0.2,1), lty=3)
+lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 5], col=rgb(0,0,0.7))
+lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 3], col=rgb(0,0,0.7), lty=3)
+lines(ts.ages, su[BWT.e.start:(BWT.e.start + ts.len - 1), 7], col=rgb(0,0,0.7), lty=3)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
@@ -824,34 +854,28 @@ text(xl, yl, "A")
 #Second panel for seawater d18O
 par(mai=c(1,1,0.2,0.2))
 plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-     xlim=c(1239,1315), ylim=c(1.75,0))
+     xlim=c(1239,1315), ylim=c(1.5,-0.5))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(ts.ages, sl$d18O_sw.b[i,], col = rgb(0.5,0,0, 0.01))
 }
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages, sl$d18O_sw.e[i,], col = rgb(0,0,0.5, 0.01))
+  lines(ts.ages, sl$d18O_sw.e[i,], col = rgb(0,0,1, 0.01))
 }
 lines(ts.ages, su[d18O.b.start:(d18O.b.start+ts.len-1), 5], col="red")
 lines(ts.ages, su[d18O.b.start:(d18O.b.start+ts.len-1), 3], col="red", lty=3)
 lines(ts.ages, su[d18O.b.start:(d18O.b.start+ts.len-1), 7], col="red", lty=3)
-lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 5], col=rgb(0.2,0.2,1))
-lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 3], col=rgb(0.2,0.2,1), lty=3)
-lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 7], col=rgb(0.2,0.2,1), lty=3)
+lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 5], col=rgb(0,0,0.7))
+lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 3], col=rgb(0,0,0.7), lty=3)
+lines(ts.ages, su[d18O.e.start:(d18O.e.start+ts.len-1), 7], col=rgb(0,0,0.7), lty=3)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")
 
 dev.off()
 
-##Calculate paired difference between BWT samples for two records
-#Get quantile value for zero difference
-BWT.delta = sl$BWT.b - sl$BWT.e
-BWT.ptiles = matrix(double(), ncol = ncol(BWT.delta), nrow = 4)
-for(j in 1:ncol(BWT.delta)){
-  BWT.ptiles[1:3,j] = quantile(BWT.delta[,j], c(0.025,0.5,0.975))
-  tst = ecdf(BWT.delta[,j])
-  BWT.ptiles[4,j] = tst(0)
-}
+
+
+
 
 ##Calculate paired difference between d18O_sw samples for two records
 #Get quantile value for zero difference
@@ -863,22 +887,9 @@ for(j in 1:ncol(d18O_sw.delta)){
   d18O_sw.ptiles[4,j] = tst(0)
 }
 
-##Plot differences and quantile values of zero difference
-plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-     xlim=c(1240,1315), ylim=c(0,8))
-for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages, BWT.delta[i,], col = rgb(0,0,0, 0.01))
-}
-lines(ts.ages, BWT.ptiles[2,], col="red")
-lines(ts.ages, BWT.ptiles[1,], col="red", lty=3)
-lines(ts.ages, BWT.ptiles[3,], col="red", lty=3)
-par(new = TRUE)
-plot(ts.ages, pmax(BWT.ptiles[4,],1e-4), type="l", log="y", axes = FALSE, 
-     ylim=c(5e-3,5e-1), xlab="", ylab="")
-axis(4, at=c(5e-3,5e-2,5e-1))
-
-plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-     xlim=c(1240,1315), ylim=c(-1,1))
+##Plot difference in d18Osw and zero difference probs
+plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
+     xlim=c(1239,1315), ylim=c(-0.5,2))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(ts.ages, d18O_sw.delta[i,], col = rgb(0,0,0, 0.01))
 }
@@ -886,7 +897,18 @@ lines(ts.ages, d18O_sw.ptiles[2,], col="red")
 lines(ts.ages, d18O_sw.ptiles[1,], col="red", lty=3)
 lines(ts.ages, d18O_sw.ptiles[3,], col="red", lty=3)
 par(new = TRUE)
-plot(ts.ages, pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), type="l", log="y", 
-     axes = FALSE, xlim=c(1240,1315), ylim=c(5e-3,5e-1), xlab="", ylab="")
-axis(4, at=c(5e-3,5e-2,5e-1))
-lines(c(1230,1320), c(0.05,0.05), lty=2)
+plot(ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), type="l", log="y", 
+     axes = FALSE, xlim=c(1239,1315), ylim=c(5e-4,5e-1), xlab="", ylab="")
+axis(4, at=c(5e-4,5e-3,5e-2,5e-1))
+lines(c(1230,1320), c(0.01,0.01), lty=2)
+
+##Calculate paired difference between d18O_sw samples for two records
+#Get quantile value for zero difference
+d18O_sw.delta = post.birn$BUGSoutput$sims.list$d18O_sw - post.elder$BUGSoutput$sims.list$d18O_sw
+d18O_sw.ptiles = matrix(double(), ncol = ncol(d18O_sw.delta), nrow = 4)
+for(j in 1:ncol(d18O_sw.delta)){
+  d18O_sw.ptiles[1:3,j] = quantile(d18O_sw.delta[,j], c(0.025,0.5,0.975))
+  tst = ecdf(d18O_sw.delta[,j])
+  d18O_sw.ptiles[4,j] = tst(0)
+}
+lines(ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), col="blue")
