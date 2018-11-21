@@ -39,12 +39,15 @@ proc.time() - pt
 save(post.mg, file = "post_mg.RData")
 
 sl = post.mg$BUGSoutput$sims.list
+su = post.mg$BUGSoutput$summary
 sims = nrow(sl$MgCa_sw_m)
-View(post.mg$BUGSoutput$summary)
+View(su)
 
-plot(-10, 0, xlab="Age", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0.8,6))
+plot(-10, 0, xlab="Age (Ma)", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0.8,6))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(mgca_ts.ages, sl$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
 }
-
+lines(mgca_ts.ages, su[1:mgca_ts.len, 5], col="red")
+lines(mgca_ts.ages, su[1:mgca_ts.len, 3], col="red", lty=3)
+lines(mgca_ts.ages, su[1:mgca_ts.len, 7], col="red", lty=3)
 
