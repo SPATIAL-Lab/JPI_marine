@@ -134,8 +134,8 @@ model {
   #MgCa_sw_m.eps[1] ~ dunif(-MgCa_sw_m.eps.hr, MgCa_sw_m.eps.hr)
   MgCa_sw_m.eps[1] ~ dnorm(0, MgCa_sw_m.pre)
   MgCa_sw_m[1] ~ dunif(MgCa_sw_m.init.min, MgCa_sw_m.init.max)
-  MgCa_sw_m.init.min = 0.75
-  MgCa_sw_m.init.max = 2
+  MgCa_sw_m.init.min = 1
+  MgCa_sw_m.init.max = 3
 
   #Priors on MgCa_sw model parameters  
   

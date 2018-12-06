@@ -42,7 +42,7 @@ prep.lear = function(){
   mgca_age.ind = round((ts.min - d_mgca$Age.Ma) / ts.step) + 1
   
   ##Set up timeseries for MgCa_sw modeling
-  mgca_ts.min = 110
+  mgca_ts.min = 80
   mgca_ts.max = 0
   mgca_ts.step = 1
   mgca_ts.ages = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
@@ -105,8 +105,8 @@ prep.birn = function(){
   
   #get distributions of sw Mg/Ca from long model
   load("post_mg.RData") #uses output from MgCa_sw_model.R
-  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
-  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
+  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
   return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
@@ -146,10 +146,13 @@ prep.elder = function(){
   d_d18O_calib = read.csv("U_d18O_calib.csv")
   d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
   
+  #Constraints based on LGM downcore, not used
+#  LGM = c(-0.24, 1.7) #D_MgCa, D_d18O
+  
   #get distributions of sw Mg/Ca from long model
   load("post_mg.RData") #uses output from MgCa_sw_model.R
-  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
-  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
+  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
   return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
@@ -198,8 +201,8 @@ prep.multi = function(){
   
   #get distribution of sw Mg/Ca for early Pleistocene from long model
   load("post_mg.RData") #uses output from MgCa_sw_model.R
-  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
-  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,110])
+  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
+  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
   return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca.b = d_mgca.b, d_o.b = d_o.b, 

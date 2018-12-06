@@ -168,8 +168,8 @@ BWT.start = match("BWT[1]", row.names(su))
 d18O.start = match("d18O_sw[1]", row.names(su))
 MgCa.start = match("MgCa_sw_m[1]", row.names(su))
 
-##Figure 2: the modeled timeseries
-png("../Figure2.png", units="in", width=5, height=5, res=300)
+##Figure 3: the modeled timeseries
+png("../Figure03.png", units="in", width=5, height=5, res=300)
 layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.1*2.54), lcm(2.9*2.54)))
 par(mai=c(0.2,1,0.2,0.2), cex=0.85)
 plot(-10, 0, xlab = "", ylab = expression("BWT ("*degree*" C)"),
@@ -187,7 +187,7 @@ tp = d$d_mgca[order(d$d_mgca$Age.Ma), "Age.Ma"]
 points(tp, rep(-3, nrow(d$d_mgca)), pch=21, bg = "white")
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "A")
+text(xl, yl, "(a)")
 
 #Second panel for seawater d18O
 par(mai=c(1,1,0.2,0.2))
@@ -203,30 +203,37 @@ op = d$d_o[order(d$d_o$Age.Ma),"Age.Ma"]
 points(op, rep(2, nrow(d$d_o)), pch=21, bg = "white")
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "B")
+text(xl, yl, "(b)")
 
 dev.off()
 
-##Figure 3: The Mg/Ca sw time series
-png("../Figure3.png", units="in", width=5, height=2.75, res=300)
+##Figure 2: The Mg/Ca sw time series
+png("../Figure02.png", units="in", width=5, height=2.75, res=300)
 par(mar=c(4,4,1,1), cex=0.85)
-plot(-10, 0, xlab="Age (Ma)", ylab ="Seawater Mg/Ca", xlim=c(0,100), ylim=c(0.8,5.5))
+plot(-10, 0, xlab="Age (Ma)", ylab ="Seawater Mg/Ca", xlim=c(0,80), ylim=c(0.8,5.5))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
   lines(d$mgca_ts.ages, sl$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
 }
 lines(d$mgca_ts.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 5], col="red")
 lines(d$mgca_ts.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 3], col="red", lty=3)
 lines(d$mgca_ts.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 7], col="red", lty=3)
+
+#curve fit from Lear 15 for comparison
+ages = seq(0, 55, 1)
+vals = 5.2 - 0.238 * ages + 0.00661 * ages^2 - 6.66e-5 * ages^3
+lines(ages, vals, lty=2)
+
+#points showing Mg/Ca proxy obs and distribution of proxy and calib data
 points(d$d_mgca_sw$Age, d$d_mgca_sw$MgCa, pch=21, bg = "white")
-points(d$d_mgca$Age.Ma, rep(1, nrow(d$d_mgca)), pch=21, bg = "black")
+points(d$d_mgca$Age.Ma, rep(0.8, nrow(d$d_mgca)), pch=21, bg = "black")
 calib_ages = d$d_mgca_calib$Age
 calib_ages = calib_ages[calib_ages>0]
-points(calib_ages, rep(1, length(calib_ages)), pch=21, bg = "grey")
+points(calib_ages, rep(0.8, length(calib_ages)), pch=21, bg = "grey")
 
 dev.off()
 
 ##Figure 5: Prior/posterior plots for calibration parameters
-png("../Figure5.png", res = 300, units = "in", width = 8, height = 4)
+png("../Figure05.png", res = 300, units = "in", width = 8, height = 4)
 layout(matrix(c(1,2,3,4,5,6,7,8), nrow = 2, ncol = 4, byrow=TRUE))
 par(mai=c(0.5,0.5,0.1,0.1))
 xoff = 2.3
@@ -237,28 +244,28 @@ lined(rnorm(100000, 1.5, 0.1))
 title(xlab=expression(paste(alpha[1])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "A")
+text(xl, yl, "(a)")
 
 plotd(sl$a[,2], col="red", ylab="")
 lined(rnorm(100000, 0.1, 0.01))
 title(xlab=expression(paste(alpha[2])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "B")
+text(xl, yl, "(b)")
 
 plotd(sl$a[,3], col="red", ylab="")
 lined(rnorm(100000, -0.02, 0.03))
 title(xlab=expression(paste(alpha[3])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "C")
+text(xl, yl, "(c)")
 
 plotd(sqrt(1/(sl$MgCa_calib.pre)), col="red", xlim=c(0.05,0.25), ylab="")
 lined(sqrt(1/(rgamma(100000, 2, 1/30))))
 title(xlab=expression(paste(sigma["MgCaf"])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "D")
+text(xl, yl, "(d)")
 
 #d18O calibration parms
 plotd(sl$b[,1], col="red")
@@ -266,21 +273,21 @@ lined(rnorm(100000, 3.32, 0.02))
 title(xlab=expression(paste(beta[1])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "E")
+text(xl, yl, "(e)")
 
 plotd(sl$b[,2], col="red", ylab="")
 lined(rnorm(100000, -0.237, 0.01))
 title(xlab=expression(paste(beta[2])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "F")
+text(xl, yl, "(f)")
 
 plotd(sl$b[,3], col="red", ylab="")
 lined(rnorm(100000, 0.001, 0.0005))
 title(xlab=expression(paste(beta[3])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "G")
+text(xl, yl, "(g)")
 
 plotd(sqrt(1/(sl$d18O_calib.pre)), col="red", xlim=c(0.05,0.7), ylab="")
 lined(sqrt(1/(sl$d18O_calib.pre.2)), col="red", lty=2)
@@ -289,54 +296,54 @@ lined(sqrt(1/(rgamma(100000, 6, 1))), lty=2)
 title(xlab=expression(paste(sigma[paste(delta, "18Of")])), line = xoff)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "H")
+text(xl, yl, "(h)")
 
 dev.off()
 
-##Figure 6: Parameter covariance
-png("../Figure6.png", res=300, units="in", width=6, height=4)
+##Figure 7: Parameter covariance
+png("../Figure07.png", res=300, units="in", width=6, height=4)
 layout(matrix(c(1,2,3,4,5,6), nrow=2, byrow=TRUE))
 par(mar=c(4,4,0.4,0.4))
 
 smoothScatter(sl$a[,1], sl$a[,2], xlab="", ylab="")
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "A")
+text(xl, yl, "(a)")
 title(xlab=expression(paste(alpha[1])), line = 2.5)
 title(ylab=expression(paste(alpha[2])), line = 2.5)
 
 smoothScatter(sl$a[,1], sl$a[,3], xlab="", ylab="")
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "B")
+text(xl, yl, "(b)")
 title(xlab=expression(paste(alpha[1])), line = 2.5)
 title(ylab=expression(paste(alpha[3])), line = 2.5)
 
 smoothScatter(sl$a[,2], sl$a[,3], xlab="", ylab="")
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "C")
+text(xl, yl, "(c)")
 title(xlab=expression(paste(alpha[2])), line = 2.5)
 title(ylab=expression(paste(alpha[3])), line = 2.5)
 
 smoothScatter(sl$b[,1], sl$b[,2], xlab="", ylab="")
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "D")
+text(xl, yl, "(d)")
 title(xlab=expression(paste(beta[1])), line = 2.5)
 title(ylab=expression(paste(beta[2])), line = 2.5)
 
 smoothScatter(sl$b[,1], sl$b[,3], xlab="", ylab="")
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "E")
+text(xl, yl, "(e)")
 title(xlab=expression(paste(beta[1])), line = 2.5)
 title(ylab=expression(paste(beta[3])), line = 2.5)
 
 smoothScatter(sl$b[,2], sl$b[,3], xlab="", ylab="")
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "F")
+text(xl, yl, "(f)")
 title(xlab=expression(paste(beta[2])), line = 2.5)
 title(ylab=expression(paste(beta[3])), line = 2.5)
 
@@ -346,7 +353,7 @@ dev.off()
 a.cor = cor(sl$a)
 b.cor = cor(sl$b)
 
-##Figure 8 showing 2-d posterior density of environmental time series parameters 
+##Figure 9 showing 2-d posterior density of environmental time series parameters 
 
 #First calculate the difference of each BWT and d18O_sw values relative to
 #the 18Ma value for that posterior draw
@@ -372,7 +379,7 @@ library(MASS)
 DKE = kde2d(D_BWT, D_d18O_sw, h=c(1, 0.5), n=50)
 
 #Plot it
-png("../Figure8.png", res=300, units="in", width=3, height=3)
+png("../Figure09.png", res=300, units="in", width=3, height=3)
 par(mar=c(5,5,0.5,0.5), cex=0.75)
 smoothScatter(D_BWT, D_d18O_sw, xlab=expression(Delta*"BWT ("*degree*" C)"),
               ylab = expression(Delta*delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
@@ -383,10 +390,10 @@ points(D_BWT.m, D_d18O_sw.m, pch=19, col=pal, cex=0.15)
 
 dev.off()
 
-##Figure 7: 9 panel posterior density plots for time series model parameters
+##Figure 8: 9 panel posterior density plots for time series model parameters
 
 #Set it up
-png("../Figure7.png", res=300, units="in", width = 5.6, height = 5.2)
+png("../Figure08.png", res=300, units="in", width = 5.6, height = 5.2)
 layout(matrix(seq(1,9), nrow=3, byrow = TRUE), 
        widths=c(lcm(2*2.54), lcm(1.8*2.54), lcm(1.8*2.54)),
        heights=c(lcm(1.6*2.54), lcm(1.6*2.54), lcm(2*2.54)))
@@ -404,7 +411,7 @@ lined(sl$d18O_sw.eps.ac, col="red", lty=2)
 lines(c(0,0.4), c(2.5,2.5))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "A")
+text(xl, yl, "(a)")
 
 #BWT TS SD
 par(mai = c(0.1,0.3,0.1,0.1))
@@ -415,7 +422,7 @@ box()
 lined(sqrt(1/rgamma(100000, 20, 2)))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "B")
+text(xl, yl, "(b)")
 
 #d18O TS SD
 par(mai = c(0.1,0.3,0.1,0.1))
@@ -426,7 +433,7 @@ box()
 lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "C")
+text(xl, yl, "(c)")
 
 #load multi
 sl = post.multi$BUGSoutput$sims.list
@@ -441,7 +448,7 @@ lined(sl$d18O_sw.b.eps.ac, col="red", lty=2)
 lines(c(0,0.8), c(2.5,2.5))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "D")
+text(xl, yl, "(d)")
 
 #BWT TS SD
 par(mai = c(0.1,0.3,0.1,0.1))
@@ -452,7 +459,7 @@ box()
 lined(sqrt(1/rgamma(100000, 20, 2)))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "E")
+text(xl, yl, "(e)")
 
 #d18O TS SD
 par(mai = c(0.1,0.3,0.1,0.1))
@@ -463,7 +470,7 @@ box()
 lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "F")
+text(xl, yl, "(f)")
 
 #BWT and d18O timeseries autocorrelation
 par(mai = c(0.5,0.5,0.1,0.1))
@@ -473,7 +480,7 @@ lines(c(0,0.8), c(2.5,2.5))
 title(xlab=expression(phi), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "G")
+text(xl, yl, "(g)")
 
 #BWT TS SD
 par(mai = c(0.5,0.3,0.1,0.1))
@@ -482,7 +489,7 @@ lined(sqrt(1/rgamma(100000, 20, 2)))
 title(xlab=expression(paste(sigma ["BWT"])), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "H")
+text(xl, yl, "(h)")
 
 #d18O TS SD
 par(mai = c(0.5,0.3,0.1,0.1))
@@ -491,7 +498,7 @@ lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
 title(xlab=expression(sigma [paste(delta, "18Osw")]), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "I")
+text(xl, yl, "(i)")
 
 dev.off()
 
@@ -499,6 +506,8 @@ dev.off()
 
 #These use data from Multi run
 d = prep.multi()
+db = read.csv("birner_2016_interp.csv")
+de = read.csv("elderfield_2012_interp.csv")
 
 #Shorthand
 sl = post.multi$BUGSoutput$sims.list
@@ -512,7 +521,7 @@ BWT.e.start = match("BWT.e[1]", row.names(su))
 d18O.e.start = match("d18O_sw.e[1]", row.names(su))
 
 #Setup
-png("../Figure4.png", units="in", width=5, height=5, res=300)
+png("../Figure04.png", units="in", width=5, height=5, res=300)
 layout(matrix(c(1,2), 2, 1), heights = c(lcm(2.1*2.54), lcm(2.9*2.54)))
 par(mai=c(0.2,1,0.2,0.2), cex=0.85)
 
@@ -534,9 +543,17 @@ lines(d$ts.ages, su[BWT.b.start:(BWT.b.start + d$ts.len - 1), 7], col="red", lty
 lines(d$ts.ages, su[BWT.e.start:(BWT.e.start + d$ts.len - 1), 5], col=rgb(0,0,0.7))
 lines(d$ts.ages, su[BWT.e.start:(BWT.e.start + d$ts.len - 1), 3], col=rgb(0,0,0.7), lty=3)
 lines(d$ts.ages, su[BWT.e.start:(BWT.e.start + d$ts.len - 1), 7], col=rgb(0,0,0.7), lty=3)
+
+#add reconstructions from original papers 
+arrows(1279.45, 3.5-1.74, 1279.45, 3.5+1.74, code=3, angle=90, length=0.06, col="red")
+points(db$Age_ka, db$BWT, pch=21, cex=0.5, bg="red")
+arrows(1273.7, -0.543-2, 1273.7, -0.543+2, code=3, angle=90, length=0.06, col=rgb(0,0,0.7))
+points(de$Age.ka, de$BWT, pch=21, cex=0.5, bg=rgb(0,0,0.7))
+
+#panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "A")
+text(xl, yl, "(a)")
 
 #Second panel for seawater d18O
 par(mai=c(1,1,0.2,0.2))
@@ -554,13 +571,21 @@ lines(d$ts.ages, su[d18O.b.start:(d18O.b.start+d$ts.len-1), 7], col="red", lty=3
 lines(d$ts.ages, su[d18O.e.start:(d18O.e.start+d$ts.len-1), 5], col=rgb(0,0,0.7))
 lines(d$ts.ages, su[d18O.e.start:(d18O.e.start+d$ts.len-1), 3], col=rgb(0,0,0.7), lty=3)
 lines(d$ts.ages, su[d18O.e.start:(d18O.e.start+d$ts.len-1), 7], col=rgb(0,0,0.7), lty=3)
+
+#add reconstructions from original papers 
+arrows(1279.45, 0.45-0.46, 1279.45, 0.45+0.46, code=3, angle=90, length=0.06, col="red")
+lines(db$Age_ka, db$d18O_sw, lty=2, col="red")
+arrows(1273.7, -0.079-0.4, 1273.7, -0.079+0.4, code=3, angle=90, length=0.06, col=rgb(0,0,0.7))
+lines(de$Age.ka, de$d18O_sw, lty=2, col=rgb(0,0,0.7))
+
+#panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "B")
+text(xl, yl, "(b)")
 
 dev.off()
 
-##Figure 9, 2 panels, first shows change in BWT values as a function of time
+##Figure 10, 2 panels, first shows change in BWT values as a function of time
 
 #using Lear analysis
 d = prep.lear()
@@ -597,7 +622,7 @@ for(j in 1:d$ts.len){
 }
 
 #Now a plot showing probabilities on delta T relative to modern
-png("../Figure9.png", res=300, units="in", width = 5, height = 5.5)
+png("../Figure10.png", res=300, units="in", width = 5, height = 5.5)
 layout(matrix(c(1,2), nrow = 2))
 par(mar = c(4,4.5,1,4), cex = 0.85)
 plot(-10, 0, xlab = "", ylab = "", xlim=c(0.05,2), ylim=c(-2.5,2))
@@ -611,7 +636,7 @@ lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 3], col="red", lty=3)
 lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 7], col="red", lty=3)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "A")
+text(xl, yl, "(a)")
 
 par(new=TRUE)
 plot(d$ts.ages[1:(d$ts.len-1)], BWT.delta.p[1:(d$ts.len-1)], xlim=c(0.05,2), ylim=c(5e-3, 1), type="l", 
@@ -657,7 +682,7 @@ lines(d$ts.ages, d18O_sw.ptiles[1,], col="red", lty=3)
 lines(d$ts.ages, d18O_sw.ptiles[3,], col="red", lty=3)
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
-text(xl, yl, "B")
+text(xl, yl, "(b)")
 
 par(new = TRUE)
 plot(d$ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), type="l", log="y", 
@@ -679,6 +704,58 @@ lines(d$ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), lty=
 mtext(side = 4, "Zero difference probability", line = 2.75)
 
 dev.off()
+
+##Figure 6 compares constraints of downcore 1123 data and coretop data 
+##on Uvigerina Mg/Ca T sensitivity; downcore modeled on Elderfield et al, 2010
+
+#Read d18O calibration data needed for downcore constraint
+d = read.csv("U_d18O_calib.csv")
+d = d[is.na(d$Ignore),]
+
+#Setup
+parameters = c("a", "MgCa_calib.pre", "b", "d18O_calib.pre"," D_d18O_sw_LGM", 
+               "D_BWT_LGM", "BWT_HOL")
+rdat = list(d18O_calib.bwt.m = d$BWT, d18O_calib.bwt.sd = d$BWT_sd, d18O_calib = d$d18O_f.sw, LGM = c(-0.24, 1.7))
+
+#Run it
+set.seed(proc.time()[3])
+rmod <- jags(model.file = "mgca_dc_calib_model.R", parameters.to.save = parameters, 
+             data = rdat, inits = NULL, 
+             n.chains=3, n.iter = 50000, n.burnin = 500, n.thin = 10)
+
+#needed for plotting
+source("helpers.R")
+
+#First plot prior and results of downcore analysis
+png("../Figure06.png", res=300, units="in", width=3, height=3)
+par(mar=c(5,5,0.5,0.5), cex=0.75)
+plotd(runif(100000, -0.05, 0.35), ylim=c(0,100), 
+      xlab = expression(italic("Uvigerina") * " Mg/Ca T sensitivity (" * alpha[2] * ")")) #prior
+lined(rmod$BUGSoutput$sims.list$a[,2], col="red") #posterior
+
+#Now the coretop calibration for Uvigerina
+d = read.csv("U_mgca_calib.csv")
+
+#Assign seawater Mg/Ca estimates and uncertainty 
+d$MgCa_sw = rep(5.2, nrow(d))
+d$MgCa_sw_sd = rep(0.03, nrow(d))
+
+#Setup
+parameters = c("a", "mgca_pre")
+rdat = list(t_m = d$BWT, t_sd = d$BWT_sd, mgca_sw_m = d$MgCa_sw, mgca_sw_sd = d$MgCa_sw_sd, mgca = d$MgCa)
+
+#Run it
+set.seed(proc.time()[3])
+rmod <- jags(model.file = "mgca_calib_model.R", parameters.to.save = parameters, 
+             data = rdat, inits = NULL, 
+             n.chains=3, n.iter = 50000, n.burnin = 500, n.thin = 10)
+
+lined(rmod$BUGSoutput$sims.list$a[,2], col="red", lty=2)
+
+dev.off()
+
+
+
 
 #####
 ##The rest is exploratory code, few useful stats, etc.
@@ -723,13 +800,6 @@ mean(su.diff[BWT.b.start:(BWT.b.start+ts.len-1)])
 mean(su.diff[d18O.b.start:(d18O.b.start+ts.len-1)])
 mean(su.diff[BWT.e.start:(BWT.e.start+ts.len-1)])
 mean(su.diff[d18O.e.start:(d18O.e.start+ts.len-1)])
-
-
-
-
-
-
-
 
 #Shorthand
 sl = post.birn$BUGSoutput$sims.list
@@ -805,13 +875,13 @@ axis(1, labels=FALSE)
 axis(2)
 box()
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 5], col="red")
-lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 3], col="red", lty=3)
-lines(ts.ages, su[BWT.start:(BWT.start + ts.len - 1), 7], col="red", lty=3)
-tp = d_mgca[order(d_mgca$Age_ka), "Age_ka"]
-points(tp, rep(-3, nrow(d_mgca)), pch=21, bg = "white")
+lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 5], col="red")
+lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 3], col="red", lty=3)
+lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 7], col="red", lty=3)
+tp = d$d_mgca[order(d$d_mgca$Age_ka), "Age_ka"]
+points(tp, rep(-3, nrow(d$d_mgca)), pch=21, bg = "white")
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "A")
@@ -821,13 +891,13 @@ par(mai=c(1,1,0.2,0.2))
 plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
      xlim=c(1239,1315), ylim=c(1.0,-0.6))
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
 }
-lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 5], col="red")
-lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 3], col="red", lty=3)
-lines(ts.ages, su[d18O.start:(d18O.start+ts.len-1), 7], col="red", lty=3)
-op = d_o[order(d_o$Age_ka),"Age_ka"]
-points(op, rep(1, nrow(d_o)), pch=21, bg = "white")
+lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 5], col="red")
+lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 3], col="red", lty=3)
+lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 7], col="red", lty=3)
+op = d$d_o[order(d$d_o$Age_ka),"Age_ka"]
+points(op, rep(1, nrow(d$d_o)), pch=21, bg = "white")
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "B")

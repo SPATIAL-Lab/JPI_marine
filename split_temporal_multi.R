@@ -45,12 +45,12 @@ model {
   a[2] ~ dnorm(a.2.m, 1 / a.2.var)
   a[3] ~ dnorm(a.3.m, 1 / a.3.var)
 
-  a.1.m = 1.5
+  a.1.m = 1.02
   a.1.var = 0.1 ^ 2
-  a.2.m = 0.1
+  a.2.m = 0.07
   a.2.var = 0.01 ^ 2
-  a.3.m = -0.0237 
-  a.3.var = 0.0252 ^ 2
+  a.3.m = -0.02 
+  a.3.var = 0.03 ^ 2
 
   #Data model for d18O observations
 

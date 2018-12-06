@@ -1,23 +1,34 @@
 Age, MgCa, Sigma, Ref
-0,5.2,0.03, de Villiers
-1.65,5.5,0.53, Coggon
-5,3.6,0.5, Horita
-5,4.1,0.5, Lowenstein
-14,3.4,0.5, Horita
-14,3.7,0.5, Lowenstein
-35,2,0.3, Horita
-37,2.4,0.3, Horita
-37,3.1,0.5, Lowenstein
-52.75,1.3195,0.5, Hasiuk
-52.75,1.75,0.5, Dickson
-100,0.82,0.5, Hasiuk
-100,1.4,0.5, Dickson
-33,2.4,0.3, Coggon
-33,2.35,0.3, Coggon
-36,2.41,0.3, Coggon
-30,2.05,0.3, Coggon
-24,2.27,0.3, Coggon
-32,1.97,0.3, Coggon
-40,1.76,0.3, Coggon
-79,1.82,0.29, Coggon
-109,1.33,0.18, Coggon
+0,5.2,0.03,de Villiers
+1.65,5.5,0.53,Coggon
+5,3.6,0.5,Horita
+5,4.1,0.5,Lowenstein
+14,3.4,0.5,Horita
+14,3.7,0.5,Lowenstein
+24,2.27,0.3,Coggon
+30,2.05,0.3,Coggon
+31,2.24,0.24,Evans
+32,1.97,0.3,Coggon
+33,2.4,0.3,Coggon
+33,2.35,0.3,Coggon
+33.9,2.45,0.52,Evans
+35,2,0.3,Horita
+36,2.41,0.3,Coggon
+37,2.4,0.3,Horita
+37,3.1,0.5,Lowenstein
+39,2.09,0.18,Evans
+39,2.11,0.34,Evans
+40,1.76,0.3,Coggon
+42.5,2.2,0.19,Evans
+44,2,0.19,Evans
+47,2.07,0.22,Evans
+49.9,2.29,0.22,Evans
+50.7,2.11,0.25,Evans
+50.8,2.16,0.24,Evans
+52.75,1.3195,0.5,Hasiuk
+52.75,1.75,0.5,Dickson
+53.4,2.01,0.19,Evans
+53.5,2.26,0.24,Evans
+54.9,2.43,0.21,Evans
+55.3,2.88,0.24,Evans
+79,1.82,0.29,Coggon
