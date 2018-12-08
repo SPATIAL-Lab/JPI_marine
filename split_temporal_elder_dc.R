@@ -1,5 +1,32 @@
 model {
   
+  #Data model for MgCa observations
+  
+  for(i in 1:length(MgCa)){
+    MgCa[i] ~ dnorm(MgCa.m[i], MgCa_calib.pre)
+    
+    MgCa.m[i] = (a[1] + a[2] * BWT[MgCa.age.ind[i]]) * MgCa_sw[i] ^ a[3]
+    
+    MgCa_sw[i] ~ dnorm(MgCa_sw.m, 1 / 0.03 ^ 2)
+    
+  }
+  
+  MgCa_sw.m ~ dnorm(MgCa_sw.neo[1], 1 / MgCa_sw.neo[2] ^ 2)
+  
+  #Data model for MgCa_calib observations
+  
+  for(i in 1:length(MgCa_calib)){
+    MgCa_calib[i] ~ dnorm(MgCa_calib.m[i], MgCa_calib.pre)
+    
+    MgCa_calib.m[i] = (a[1] + a[2] * MgCa_calib.bwt[i]) * MgCa_calib.sw[i] ^ a[3]
+    
+    MgCa_calib.bwt[i] ~ dnorm(MgCa_calib.bwt.m[i], 1 / MgCa_calib.bwt.sd[i] ^ 2)
+    
+    MgCa_calib.sw[i] ~ dnorm(5.2, 1 / 0.03 ^ 2)
+    
+  }
+  
+  ##Downcore Mg/Ca calibration
   #Data model for MgCa
   for(i in 1:length(MgCa_HOL)){
     MgCa_HOL[i] ~ dnorm(MgCa_HOL.m[i], MgCa_calib.pre)
@@ -38,15 +65,28 @@ model {
   
   #Priors on MgCa_calib data model parameters
   
-  #Precision based on Uvigerina coretop variance
   MgCa_calib.pre ~ dgamma(MgCa_calib.pre.shp, MgCa_calib.pre.rate)
   MgCa_calib.pre.shp = 2
   MgCa_calib.pre.rate = 1/30
   
-  #Using very loose constraints on MgCa calib parameters
-  a[1] ~ dunif(0.9, 1.1)
-  a[2] ~ dunif(-0.05, 0.35)
-  a[3] ~ dunif(-0.02, 0.02) 
+  a[1] ~ dnorm(a.1.m, 1 / a.1.var)
+  a[2] ~ dnorm(a.2.m, 1 / a.2.var)
+  a[3] ~ dnorm(a.3.m, 1 / a.3.var)
+  
+  a.1.m = 0.985
+  a.1.var = 0.1 ^ 2
+  a.2.m = 0.08
+  a.2.var = 0.05 ^ 2
+  a.3.m = -0.001 
+  a.3.var = 0.02 ^ 2
+  
+  #Data model for d18O observations
+  
+  for(i in 1:length(d18O)){
+    d18O[i] ~ dnorm(d18O.m[i], d18O_calib.pre)
+    
+    d18O.m[i] = d18O_sw[d18O.age.ind[i]] + b[1] + b[2] * BWT[d18O.age.ind[i]] + b[3] * BWT[d18O.age.ind[i]] ^ 2
+  }
   
   #Data model for d18O_calib observations
   
@@ -75,4 +115,40 @@ model {
   b.3.m = -0.001
   b.3.var = 0.001 ^ 2
   
+  #System model for BWT and d18O timeseries
+  
+  for(i in 2:nages){
+    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
+    BWT[i] = BWT[i-1] + BWT.eps[i]
+    
+    d18O_sw.eps[i] ~ dnorm(d18O_sw.eps[i - 1] * d18O_sw.eps.ac, d18O_sw.pre)
+    BWT.eps[i] ~ dnorm(BWT.eps[i - 1] * BWT.eps.ac, BWT.pre)
+    
+  }
+  
+  #Priors on BWT and d18O timeseries model parameters
+  
+  d18O_sw.eps[1] ~ dnorm(0, d18O_sw.pre)
+  BWT.eps[1] ~ dnorm(0, BWT.pre) 
+  d18O_sw[1] ~ dunif(d18O_sw.init.min, d18O_sw.init.max)
+  BWT[1] ~ dunif(BWT.init.min, BWT.init.max)
+  
+  d18O_sw.init.min = -0.5
+  d18O_sw.init.max = 0.5
+  
+  BWT.init.min = -1
+  BWT.init.max = 4
+  
+  d18O_sw.eps.ac ~ dunif(0, 0.8)
+  BWT.eps.ac ~ dunif(0, 0.8)
+  
+  d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
+  d18O_sw.pre.shp = 10
+  d18O_sw.pre.rate = 1/5
+  
+  BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
+  BWT.pre.shp = 20
+  BWT.pre.rate = 2
+  
 }
+
