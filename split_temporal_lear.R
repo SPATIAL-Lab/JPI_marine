@@ -1,5 +1,9 @@
 model {
 
+  #####
+  ##JPI model for Mg/Ca and d18O proxy data, site 806
+  #####
+  
   #Data model for MgCa observations
 
   for(i in 1:length(MgCa)){

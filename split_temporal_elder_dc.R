@@ -1,5 +1,9 @@
 model {
   
+  #####
+  ##JPI model for Mg/Ca and d18O proxy data, site U1385, using down-core calibration
+  #####
+  
   #Data model for MgCa observations
   
   for(i in 1:length(MgCa)){

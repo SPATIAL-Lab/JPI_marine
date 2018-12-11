@@ -1,5 +1,9 @@
 model {
   
+  #####
+  ##JPI model for Mg/Ca and d18O proxy data, site 1123
+  #####
+  
   #Data model for MgCa observations
   
   for(i in 1:length(MgCa)){
@@ -12,21 +16,6 @@ model {
   }
   
   MgCa_sw.m ~ dnorm(MgCa_sw.neo[1], 1 / MgCa_sw.neo[2] ^ 2)
-  
-  #Data model for downcore MgCa_calib constraint, not used
-#  LGM[1] ~ dnorm(D_MgCa_LGM.m, MgCa_calib.pre / 2)
-#  LGM[2] ~ dnorm(D_d18O_LGM.m, d18O_calib.pre / 2)
-
-#  D_MgCa_LGM.m = (a[1] + a[2] * BWT_LGM) * MgCa_sw_LGM ^ a[3] - (a[1] + a[2] * BWT_LGM) * MgCa_sw_HOL ^ a[3]
-#  D_d18O_LGM.m = D_d18O_sw_LGM + (b[1] + b[2] * BWT_LGM + b[3] * BWT_LGM ^ 2) - (b[1] + b[2] * BWT_HOL + b[3] * BWT_HOL ^ 2)
-  
-#  D_d18O_sw_LGM ~ dnorm(1.1, 1 / 0.1 ^ 2) #Estimate from Adkins et al 2002
-#  MgCa_sw_LGM ~ dnorm(5.2, 1 / 0.03 ^ 2)
-#  MgCa_sw_HOL ~ dnorm(5.2, 1 / 0.03 ^ 2)
-  
-#  BWT_LGM = BWT_HOL + D_BWT_LGM
-#  D_BWT_LGM ~ dunif(-3.4, -1.4)
-#  BWT_HOL ~ dnorm(3.7, 1 / 0.2 ^ 2) #Estimated from Elderfield et al 2010, fig 6
   
   #Data model for MgCa_calib observations
   

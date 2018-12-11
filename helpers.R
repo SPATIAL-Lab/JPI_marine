@@ -1,8 +1,11 @@
 #####
-#Helper functions for JPI plotting etc
+#Helper functions for JPI plotting and data manipulation
 #####
 
-##Make a density plot
+#####
+#Make a density plot
+#####
+
 plotd = function(x, col="black", lty=1, main="", xlab="", ylab="Density", 
                  xlim=c(min(x),max(x)), ylim=NULL, axes = TRUE) {
   if(is.null(ylim)){
@@ -13,12 +16,18 @@ plotd = function(x, col="black", lty=1, main="", xlab="", ylab="Density",
   
 }
 
-##Add line to density plot
+#####
+#Add line to density plot
+#####
+
 lined = function(x, col="black", lty=1) {
   lines(density(x), col=col, lty=lty)
 }
 
-##Prep data for Lear analysis
+#####
+#Prep data for Site 806 analysis
+#####
+
 prep.lear = function(){
   
   ##Set up timeseries for d18O_sw and BWT modeling
@@ -37,8 +46,12 @@ prep.lear = function(){
   #Timeseries index for each d18O sample
   o_age.ind = round((ts.min - d_o$Age.Ma) / ts.step) + 1
   
-  ##Now split out the MgCa data and get TS index
+  ##Now split out the MgCa data
   d_mgca = d[!is.na(d$MgCa),]
+  
+  ##Get paleoenvironmental time series index values for the MgCa proxy data
+  #The age index gives position in paleoenvironmental time series vector
+  #corresponding to a sample's age
   mgca_age.ind = round((ts.min - d_mgca$Age.Ma) / ts.step) + 1
   
   ##Set up timeseries for MgCa_sw modeling
@@ -51,10 +64,10 @@ prep.lear = function(){
   ##Read in paleo-seawater MgCa data
   d_mgca_sw = read.csv("mgca_sw.csv")
   
-  ##Age index for seawater MgCa samples
+  ##Age index for seawater MgCa proxy data
   mgca_sw_age.ind = round((mgca_ts.min - d_mgca_sw$Age) / mgca_ts.step) + 1
   
-  ##Add indicies for seawater MgCa TS to MgCa foram data
+  ##Add age indicies for seawater MgCa TS to MgCa foram data
   mgca_age.ind.sw = round((mgca_ts.min - d_mgca$Age.Ma) / mgca_ts.step) + 1
   mgca_age.ind.all = matrix(c(mgca_age.ind, mgca_age.ind.sw), ncol = 2)
   
@@ -75,7 +88,10 @@ prep.lear = function(){
               mgca_calib_age.ind = mgca_calib_age.ind, mgca_sw_age.ind = mgca_sw_age.ind))  
 }
 
-##Load data for site U1385 analysis
+#####
+#Prep data for site U1385 analysis
+#####
+
 prep.birn = function(){
   
   ##Read proxy data
@@ -103,10 +119,10 @@ prep.birn = function(){
   d_d18O_calib = read.csv("C_d18O_calib.csv")
   d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
   
-  #get distributions of sw Mg/Ca from long model
-  load("post_mg.RData") #uses output from MgCa_sw_model.R
-  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
-  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
+  ##Get distributions of sw Mg/Ca from long model
+  load("post_lear.RData") #uses output from site 806 JPI analysis
+  mgca_sw_m.neo = mean(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80]) #column 80
+  mgca_sw_sd.neo = sd(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80])  #is 1 Ma
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
   return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
@@ -115,7 +131,10 @@ prep.birn = function(){
               mgca_sw_neo = mgca_sw_neo))  
 }
 
-##Prep data for site 1123 analysis
+#####
+#Prep data for site 1123 analysis
+#####
+
 prep.elder = function(){
   #read data
   d = read.csv("elderfield_2012.csv")
@@ -145,14 +164,11 @@ prep.elder = function(){
   ##Read in d18O calibration dataset from Marchitto 2014 compilation
   d_d18O_calib = read.csv("U_d18O_calib.csv")
   d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
-  
-  #Constraints based on LGM downcore, not used
-#  LGM = c(-0.24, 1.7) #D_MgCa, D_d18O
-  
-  #get distributions of sw Mg/Ca from long model
-  load("post_mg.RData") #uses output from MgCa_sw_model.R
-  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
-  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
+
+  ##Get distributions of sw Mg/Ca from long model
+  load("post_lear.RData") #uses output from site 806 JPI analysis
+  mgca_sw_m.neo = mean(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80]) #column 80
+  mgca_sw_sd.neo = sd(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80])  #is 1 Ma
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
   return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
@@ -162,10 +178,16 @@ prep.elder = function(){
 
 }
 
-##Prep data for multi-site analysis
+#####
+#Prep data for multi-site analysis
+#####
+
 prep.multi = function(){
+  
+  ##Read site U1385 data
   d.b = read.csv("birner_2016.csv")
   
+  ##Read site 1123 data and subset for target time interval
   d.e = read.csv("elderfield_2012.csv")
   d.e = d.e[d.e$Age_ka > 1235,]
   d.e = d.e[d.e$Age_ka < 1320,]
@@ -199,10 +221,10 @@ prep.multi = function(){
   d_d18O_calib.c = read.csv("C_d18O_calib.csv")
   d_d18O_calib.c = d_d18O_calib.c[is.na(d_d18O_calib.c$Ignore),]
   
-  #get distribution of sw Mg/Ca for early Pleistocene from long model
-  load("post_mg.RData") #uses output from MgCa_sw_model.R
-  mgca_sw_m.neo = mean(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
-  mgca_sw_sd.neo = sd(post.mg$BUGSoutput$sims.list$MgCa_sw_m[,80])
+  ##Get distributions of sw Mg/Ca from long model
+  load("post_lear.RData") #uses output from site 806 JPI analysis
+  mgca_sw_m.neo = mean(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80]) #column 80
+  mgca_sw_sd.neo = sd(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80])  #is 1 Ma
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
   return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca.b = d_mgca.b, d_o.b = d_o.b, 
