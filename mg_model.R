@@ -1,5 +1,10 @@
 model {
   
+  #Continuous AR1 -
+  #1) add equation for eps - DONE
+  #2) pass vector of ages to model (mgca.ages) and repose age index - DONE
+  #3) update eps and eps.ac units (per Myr not timestep) - DONE
+  
   #Data model for seawater MgCa observations
   
   for(i in 1:length(MgCa_sw)){
@@ -7,14 +12,16 @@ model {
     
   }
   
-  #System model for MgCa_sw timeseries
-  
+  #Process model for MgCa_sw timeseries
   
   for(i in 2:nmgca.ages){
     MgCa_sw_m[i] = MgCa_sw_m[i-1] * (MgCa_sw_m.eps[i] + 1)
     
-    #MgCa_sw_m.eps[i] ~ dunif(MgCa_sw_m.eps[i - 1] * MgCa_sw_m.eps.ac - 0.01, MgCa_sw_m.eps[i - 1] * MgCa_sw_m.eps.ac + 0.01)
-    MgCa_sw_m.eps[i] ~ dnorm(MgCa_sw_m.eps[i - 1] * MgCa_sw_m.eps.ac, MgCa_sw_m.pre)
+    MgCa_sw_m.eps[i] ~ dnorm(exp(-(1 - MgCa_sw_m.eps.ac) * tau[i]) * MgCa_sw_m.eps[i-1], 
+                                 1 / ((1 / MgCa_sw_m.pre) / (2 * (1 - MgCa_sw_m.eps.ac)) * 
+                                   (1 - exp(-2 * (1 - MgCa_sw_m.eps.ac) * tau[i]))))
+    
+    tau[i] = mgca.ages[i-1] - mgca.ages[i]                         
   }
   
   #MgCa_sw_m.eps[1] ~ dunif(-0.01, 0.01)

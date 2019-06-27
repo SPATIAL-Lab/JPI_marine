@@ -40,6 +40,58 @@ BWT.start = match("BWT[1]", row.names(su))
 d18O.start = match("d18O_sw[1]", row.names(su))
 MgCa.start = match("MgCa_sw_m[1]", row.names(su))
 
+
+#Data frame holding example parameters and variables
+ts.ind = round(runif(1, 1, sims))
+age.ind = c(99, 120)
+ts.df = data.frame(Age = d$ts.ages[age.ind[1]:age.ind[2]], 
+                   BWT = sl$BWT[ts.ind, age.ind[1]:age.ind[2]], 
+                   BWT_eps = sl$BWT[ts.ind, age.ind[1]:age.ind[2]] - 
+                     sl$BWT[ts.ind, (age.ind[1]-1):(age.ind[2]-1)])
+
+#Data frame holding MgCa_sw time series, then match these and extrac to ts.df
+MgCa_sw.df = data.frame(Age = d$mgca.ages, MgCa_sw = sl$MgCa_sw_m[ts.ind,])
+MgCa_sw.merge = MgCa_sw.df[match(ts.df$Age, MgCa_sw.df$Age), 2]
+ts.df = cbind(ts.df, MgCa_sw = MgCa_sw.merge)
+
+#Set up plots
+setEPS()
+postscript("../Figure01b.eps", width = 5, height = 7)
+layout(matrix(c(1,2,3),1,3), widths = c(lcm(1.5*2.54), lcm(1*2.54), lcm(1.5*2.54)),
+       heights = c(lcm(16), lcm(16), lcm(16)))
+
+#First panel, epsilon BWT
+par(mai=c(0.5,0.5,0,0))
+plot(ts.df$BWT_eps, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="grey", axes=FALSE)
+axis(1)
+axis(2)
+
+#Second panel, BWT
+par(mai=c(0.5,0,0,0))
+plot(ts.df$BWT, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="grey", axes=FALSE)
+axis(1)
+
+#Subset of levels w MgCa proxy obs, where MgCa_f will be simulated
+ts.df.sub = ts.df[!is.na(ts.df$MgCa_sw),]
+
+#Apply proxy model equation to forward model foram values
+ts.df.sub$MgCa_m = sl$a[ts.ind, 1] + sl$a[ts.ind, 2] * ts.df.sub$BWT * ts.df.sub$MgCa_sw ^ sl$a[ts.ind, 3] 
+MgCa_sd = sqrt(1/sl$MgCa_calib.pre[ts.ind])
+
+#Third panel, proxy record
+plot(0, 0, xlab="Foraminiferal Mg/Ca", ylab="", xlim=c(1.4,2.6), ylim=c(14, 13.0), axes=FALSE)
+axis(1)
+
+for(i in nrow(ts.df.sub):1){
+  dp = density(rnorm(100000, ts.df.sub$MgCa_m[i], MgCa_sd))
+  polygon(c(dp$x, dp$x[1]), ts.df.sub$Age[i] - c(dp$y, dp$y[1])/50, col="light grey", lty=0)
+  lines(dp$x, ts.df.sub$Age[i] - dp$y / 50)
+}
+points(ts.df.sub$MgCa_m, ts.df.sub$Age, pch=21, bg="grey")
+points(dl_mgca$MgCa[dl_mgca$Age.Ma>13.1], dl_mgca$Age.Ma[dl_mgca$Age.Ma>13.1], pch=21, bg="red")
+
+dev.off()
+
 #####
 ##Figure 3: Site 806 BWT and d18Osw time series
 #####
@@ -383,7 +435,7 @@ par(mar=c(5,5,0.5,0.5), cex=0.75)
 ##Density plot
 smoothScatter(D_BWT, D_d18O_sw, xlab=expression(Delta*"BWT ("*degree*" C)"),
               ylab = expression(Delta*delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-              xlim = c(-9,4.5), ylim = c(2,-1.5), col="white")
+              xlim = c(-9,4.5), ylim = c(-1.5,2), col="white")
 
 #Add contours
 contour(DKE, add=TRUE, drawlabels=FALSE, col="grey")
@@ -433,7 +485,7 @@ box()
 lined(sl$d18O_sw.eps.ac, col="red", lty=2)
 
 #Add prior
-lines(c(0,0.4), c(2.5,2.5))
+lines(c(0,0.4), c(1/0.4,1/0.4))
 
 #Panel label
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
@@ -472,7 +524,7 @@ axis(1, labels=FALSE)
 axis(2)
 box()
 lined(sl$d18O_sw.b.eps.ac, col="red", lty=2)
-lines(c(0,0.8), c(2.5,2.5))
+lines(c(0,0.8), c(1/0.8,1/0.8))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "(d)")
@@ -503,7 +555,7 @@ text(xl, yl, "(f)")
 par(mai = c(0.5,0.5,0.1,0.1))
 plotd(sl$BWT.e.eps.ac, col="red", ylab="", ylim=c(0,6), xlim=c(0,0.8))
 lined(sl$d18O_sw.e.eps.ac, col="red", lty=2)
-lines(c(0,0.8), c(2.5,2.5))
+lines(c(0,0.8), c(1/0.8,1/0.8))
 title(xlab=expression(phi), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15

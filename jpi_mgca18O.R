@@ -31,7 +31,7 @@ parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18
                "MgCa_sw_m", "MgCa_sw_m.pre", "MgCa_sw_m.eps.ac")
 
 ##Data to pass to the model
-dat = list(nages = d$ts.len, nmgca.ages = d$mgca_ts.len,
+dat = list(nages = d$ts.len, ages = d$ts.ages, nmgca.ages = d$mgca_ts.len, mgca.ages = d$mgca.ages,
            MgCa_calib.bwt.m = d$d_mgca_calib$BWT, MgCa_calib.bwt.sd = d$d_mgca_calib$BWT_sd, MgCa_calib = d$d_mgca_calib$MgCa,
            d18O_calib.bwt.m = d$d_d18O_calib$BWT, d18O_calib.bwt.sd = d$d_d18O_calib$BWT_sd, d18O_calib = d$d_d18O_calib$d18O_f.sw,
            MgCa_sw.age.ind = d$mgca_sw_age.ind, MgCa_sw = d$d_mgca_sw$MgCa, MgCa_sw.sd = d$d_mgca_sw$Sigma,

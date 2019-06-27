@@ -119,14 +119,20 @@ model {
   b.3.m = -0.001
   b.3.var = 0.001 ^ 2
   
-  #System model for BWT and d18O timeseries
+  #Process model for BWT and d18O timeseries
   
   for(i in 2:nages){
     d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
     BWT[i] = BWT[i-1] + BWT.eps[i]
     
-    d18O_sw.eps[i] ~ dnorm(d18O_sw.eps[i - 1] * d18O_sw.eps.ac, d18O_sw.pre)
-    BWT.eps[i] ~ dnorm(BWT.eps[i - 1] * BWT.eps.ac, BWT.pre)
+    d18O_sw.eps[i] ~ dnorm(exp(-(1 - d18O_sw.eps.ac) * tau[i]) * d18O_sw.eps[i - 1], 
+                           1 / ((1 / d18O_sw.pre) / (2 * (1 - d18O_sw.eps.ac)) *
+                                  (1 - exp(-2 * (1 - d18O_sw.eps.ac) * tau[i]))))
+    BWT.eps[i] ~ dnorm(exp(-(1 - BWT.eps.ac) * tau[i]) * BWT.eps[i - 1], 
+                       1 / ((1 / BWT.pre) / (2 * (1 - BWT.eps.ac)) *
+                              (1 - exp(-2 * (1 - BWT.eps.ac) * tau[i]))))
+    
+    tau[i] = ages[i - 1] - ages[i]
     
   }
   

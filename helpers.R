@@ -35,7 +35,6 @@ prep.lear = function(){
   ts.max = 0
   ts.step = 0.05
   ts.ages = seq(ts.min, ts.max, -ts.step)
-  ts.len = length(ts.ages)
   
   ##Prep the foram data, first read
   d = read.csv("Lear_combined.csv")
@@ -43,46 +42,57 @@ prep.lear = function(){
   ##Now split out the d18O data and strip one outlier
   d_o = d[!is.na(d$d18O),]
   d_o = d_o[d_o$Sample.ID != "806B 47-5 38-43",]
-  #Timeseries index for each d18O sample
-  o_age.ind = round((ts.min - d_o$Age.Ma) / ts.step) + 1
+
+  #Add O data ages to age vector
+  ts.ages = c(ts.ages, d_o$Age.Ma)
   
   ##Now split out the MgCa data
   d_mgca = d[!is.na(d$MgCa),]
   
-  ##Get paleoenvironmental time series index values for the MgCa proxy data
-  #The age index gives position in paleoenvironmental time series vector
-  #corresponding to a sample's age
-  mgca_age.ind = round((ts.min - d_mgca$Age.Ma) / ts.step) + 1
+  #Add Mg/Ca data ages to age vector, condense, and sort
+  ts.ages = c(ts.ages, d_mgca$Age.Ma)
+  ts.ages = unique(ts.ages)
+  ts.ages = sort(ts.ages, decreasing = TRUE)
+  
+  #Timeseries index for each proxy series and length
+  ts.len = length(ts.ages)
+  o_age.ind = match(d_o$Age.Ma, ts.ages)
+  mgca_age.ind = match(d_mgca$Age.Ma, ts.ages)
   
   ##Set up timeseries for MgCa_sw modeling
   mgca_ts.min = 80
   mgca_ts.max = 0
   mgca_ts.step = 1
   mgca_ts.ages = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
-  mgca_ts.len = length(mgca_ts.ages)
   
   ##Read in paleo-seawater MgCa data
   d_mgca_sw = read.csv("mgca_sw.csv")
   
-  ##Age index for seawater MgCa proxy data
-  mgca_sw_age.ind = round((mgca_ts.min - d_mgca_sw$Age) / mgca_ts.step) + 1
-  
-  ##Add age indicies for seawater MgCa TS to MgCa foram data
-  mgca_age.ind.sw = round((mgca_ts.min - d_mgca$Age.Ma) / mgca_ts.step) + 1
-  mgca_age.ind.all = matrix(c(mgca_age.ind, mgca_age.ind.sw), ncol = 2)
-  
   ##Read in MgCa calibration dataset
   d_mgca_calib = read.csv("O_mgca_calib.csv")
   
+  ##Append all sample ages to ts age vector
+  mgca_ages = c(mgca_ts.ages, d_mgca_sw$Age, d_mgca$Age.Ma, d_mgca_calib$Age)
+  mgca_ages = unique(mgca_ages)
+  mgca_ages = sort(mgca_ages, decreasing = TRUE)
+  
+  ##Age index for seawater MgCa proxy data and ts length
+  mgca_ages.len = length(mgca_ages)
+  mgca_sw_age.ind = match(d_mgca_sw$Age, mgca_ages)
+  
+  ##Add age indicies for seawater MgCa TS to MgCa foram data
+  mgca_age.ind.sw = match(d_mgca$Age.Ma, mgca_ages)
+  mgca_age.ind.all = matrix(c(mgca_age.ind, mgca_age.ind.sw), ncol = 2)
+  
   ##Age index for MgCa calibration samples
-  mgca_calib_age.ind = round((mgca_ts.min - d_mgca_calib$Age) / mgca_ts.step) + 1
+  mgca_calib_age.ind = match(d_mgca_calib$Age, mgca_ages)
   
   ##Read in d18O calibration dataset
   d_d18O_calib = read.csv("C_d18O_calib.csv")
   d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
-  return(list(ts.ages = ts.ages, ts.len = ts.len, mgca_ts.ages = mgca_ts.ages,
-              mgca_ts.len = mgca_ts.len, d_mgca = d_mgca, d_o = d_o, d_mgca_sw = d_mgca_sw,
+  return(list(ts.ages = ts.ages, ts.len = ts.len, mgca.ages = mgca_ages,
+              mgca_ts.len = mgca_ages.len, d_mgca = d_mgca, d_o = d_o, d_mgca_sw = d_mgca_sw,
               d_mgca_calib = d_mgca_calib, d_d18O_calib = d_d18O_calib,
               o_age.ind = o_age.ind, mgca_age.ind.all = mgca_age.ind.all,
               mgca_calib_age.ind = mgca_calib_age.ind, mgca_sw_age.ind = mgca_sw_age.ind))  
