@@ -85,8 +85,8 @@ model {
   #Process model for BWT and d18O timeseries
 
   for(i in 2:nages){
-    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
-    BWT[i] = BWT[i-1] + BWT.eps[i]
+    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i] * tau[i]
+    BWT[i] = BWT[i-1] + BWT.eps[i] * tau[i]
     
     d18O_sw.eps[i] ~ dnorm(exp(-(1 - d18O_sw.eps.ac) * tau[i]) * d18O_sw.eps[i - 1], 
                            1 / ((1 / d18O_sw.pre) / (2 * (1 - d18O_sw.eps.ac)) *
@@ -117,7 +117,7 @@ model {
 
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
   d18O_sw.pre.shp = 10
-  d18O_sw.pre.rate = 1/5
+  d18O_sw.pre.rate = 1/4
   
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
   BWT.pre.shp = 20

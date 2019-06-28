@@ -72,7 +72,7 @@ parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18
                "a", "MgCa_calib.pre", "b", "d18O_calib.pre")
 
 ##Data to pass to the model
-dat = list(nages = d$ts.len,
+dat = list(nages = d$ts.len, ages = d$ts.ages,
            MgCa_calib.bwt.m = d$d_mgca_calib$BWT, MgCa_calib.bwt.sd = d$d_mgca_calib$BWT_sd, MgCa_calib = d$d_mgca_calib$MgCa,
            d18O_calib.bwt.m = d$d_d18O_calib$BWT, d18O_calib.bwt.sd = d$d_d18O_calib$BWT_sd, d18O_calib = d$d_d18O_calib$d18O_f.sw,
            MgCa_sw.neo = d$mgca_sw_neo,
@@ -86,7 +86,7 @@ t1 = proc.time()
 
 #Some parameters for the sampler
 set.seed(t1[3])
-n.iter = 500000
+n.iter = 50000
 n.burnin = 10000
 n.thin = floor(n.iter-n.burnin)/5000
 
@@ -113,7 +113,7 @@ parameters = c("d18O_sw", "BWT", "BWT.eps.ac", "BWT.pre", "d18O_sw.eps.ac", "d18
                "a", "MgCa_calib.pre", "b", "d18O_calib.pre")
 
 ##Data to pass to the model
-dat = list(nages = d$ts.len,
+dat = list(nages = d$ts.len, ages = d$ts.ages,
            MgCa_calib.bwt.m = d$d_mgca_calib$BWT, MgCa_calib.bwt.sd = d$d_mgca_calib$BWT_sd, MgCa_calib = d$d_mgca_calib$MgCa,
            d18O_calib.bwt.m = d$d_d18O_calib$BWT, d18O_calib.bwt.sd = d$d_d18O_calib$BWT_sd, d18O_calib = d$d_d18O_calib$d18O_f.sw,
            MgCa_sw.neo = d$mgca_sw_neo,
@@ -156,7 +156,7 @@ parameters = c("d18O_sw.b", "BWT.b", "d18O_sw.e", "BWT.e",
                "a", "MgCa_calib.pre", "b.c", "b.u", "d18O_calib.c.pre", "d18O_calib.u.pre")
 
 ##Data to pass to the model
-dat = list(nages = d$ts.len,
+dat = list(nages = d$ts.len, d$ts.ages, 
            MgCa_calib.bwt.m = d$d_mgca_calib$BWT, MgCa_calib.bwt.sd = d$d_mgca_calib$BWT_sd, MgCa_calib = d$d_mgca_calib$MgCa,
            d18O_calib.u.bwt.m = d$d_d18O_calib.u$BWT, d18O_calib.u.bwt.sd = d$d_d18O_calib.u$BWT_sd, d18O_calib.u = d$d_d18O_calib.u$d18O_f.sw,
            d18O_calib.c.bwt.m = d$d_d18O_calib.c$BWT, d18O_calib.c.bwt.sd = d$d_d18O_calib.c$BWT_sd, d18O_calib.c = d$d_d18O_calib.c$d18O_f.sw,

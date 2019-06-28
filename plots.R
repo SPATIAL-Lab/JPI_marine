@@ -40,19 +40,31 @@ BWT.start = match("BWT[1]", row.names(su))
 d18O.start = match("d18O_sw[1]", row.names(su))
 MgCa.start = match("MgCa_sw_m[1]", row.names(su))
 
+#####
+##Figure 1b: Example segment of posterior sample from 806
+#####
 
 #Data frame holding example parameters and variables
 ts.ind = round(runif(1, 1, sims))
 age.ind = c(99, 120)
 ts.df = data.frame(Age = d$ts.ages[age.ind[1]:age.ind[2]], 
                    BWT = sl$BWT[ts.ind, age.ind[1]:age.ind[2]], 
-                   BWT_eps = sl$BWT[ts.ind, age.ind[1]:age.ind[2]] - 
-                     sl$BWT[ts.ind, (age.ind[1]-1):(age.ind[2]-1)])
+                   BWT_eps = (sl$BWT[ts.ind, age.ind[1]:age.ind[2]] - 
+                     sl$BWT[ts.ind, (age.ind[1]-1):(age.ind[2]-1)]) / 
+                     (d$ts.ages[(age.ind[1]-1):(age.ind[2]-1)] - 
+                      d$ts.ages[age.ind[1]:age.ind[2]]))
 
 #Data frame holding MgCa_sw time series, then match these and extrac to ts.df
 MgCa_sw.df = data.frame(Age = d$mgca.ages, MgCa_sw = sl$MgCa_sw_m[ts.ind,])
 MgCa_sw.merge = MgCa_sw.df[match(ts.df$Age, MgCa_sw.df$Age), 2]
 ts.df = cbind(ts.df, MgCa_sw = MgCa_sw.merge)
+
+#Subset of levels w MgCa proxy obs, where MgCa_f will be simulated
+ts.df.sub = ts.df[!is.na(ts.df$MgCa_sw),]
+
+#Apply proxy model equation to forward model foram values
+ts.df.sub$MgCa_m = sl$a[ts.ind, 1] + sl$a[ts.ind, 2] * ts.df.sub$BWT * ts.df.sub$MgCa_sw ^ sl$a[ts.ind, 3] 
+MgCa_sd = sqrt(1/sl$MgCa_calib.pre[ts.ind])
 
 #Set up plots
 setEPS()
@@ -63,20 +75,15 @@ layout(matrix(c(1,2,3),1,3), widths = c(lcm(1.5*2.54), lcm(1*2.54), lcm(1.5*2.54
 #First panel, epsilon BWT
 par(mai=c(0.5,0.5,0,0))
 plot(ts.df$BWT_eps, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="grey", axes=FALSE)
+points(ts.df.sub$BWT_eps, ts.df.sub$Age, pch=21, bg="red")
 axis(1)
 axis(2)
 
 #Second panel, BWT
 par(mai=c(0.5,0,0,0))
 plot(ts.df$BWT, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="grey", axes=FALSE)
+points(ts.df.sub$BWT, ts.df.sub$Age, pch=21, bg="red")
 axis(1)
-
-#Subset of levels w MgCa proxy obs, where MgCa_f will be simulated
-ts.df.sub = ts.df[!is.na(ts.df$MgCa_sw),]
-
-#Apply proxy model equation to forward model foram values
-ts.df.sub$MgCa_m = sl$a[ts.ind, 1] + sl$a[ts.ind, 2] * ts.df.sub$BWT * ts.df.sub$MgCa_sw ^ sl$a[ts.ind, 3] 
-MgCa_sd = sqrt(1/sl$MgCa_calib.pre[ts.ind])
 
 #Third panel, proxy record
 plot(0, 0, xlab="Foraminiferal Mg/Ca", ylab="", xlim=c(1.4,2.6), ylim=c(14, 13.0), axes=FALSE)
@@ -87,7 +94,7 @@ for(i in nrow(ts.df.sub):1){
   polygon(c(dp$x, dp$x[1]), ts.df.sub$Age[i] - c(dp$y, dp$y[1])/50, col="light grey", lty=0)
   lines(dp$x, ts.df.sub$Age[i] - dp$y / 50)
 }
-points(ts.df.sub$MgCa_m, ts.df.sub$Age, pch=21, bg="grey")
+points(ts.df.sub$MgCa_m, ts.df.sub$Age, pch=21, bg="white")
 points(dl_mgca$MgCa[dl_mgca$Age.Ma>13.1], dl_mgca$Age.Ma[dl_mgca$Age.Ma>13.1], pch=21, bg="red")
 
 dev.off()

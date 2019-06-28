@@ -112,15 +112,20 @@ prep.birn = function(){
   ts.max = 1235
   ts.step = 1
   ts.ages = seq(ts.min, ts.max, -ts.step)
-  ts.len = length(ts.ages)
-  
-  #prep the d18O data and add age indicies
+
+  #prep the d18O and MgCa data
   d_o = d[!is.na(d$d18O), ]
-  o_age.ind = round((ts.min - d_o$Age_ka) / ts.step) + 1
-  
-  #prep the MgCa data and add age indicies
   d_mgca = d[!is.na(d$MgCa),]
-  mgca_age.ind = round((ts.min - d_mgca$Age_ka) / ts.step) + 1
+  
+  #append proxy record ages and condense
+  ts.ages = c(ts.ages, d_o$Age_ka, d_mgca$Age_ka)
+  ts.ages = unique(ts.ages)
+  ts.ages = sort(ts.ages, decreasing = TRUE)
+  
+  #Timeseries index for each proxy series and length
+  ts.len = length(ts.ages)
+  o_age.ind = match(d_o$Age_ka, ts.ages)
+  mgca_age.ind = match(d_mgca$Age_ka, ts.ages)
   
   #U spp calibration data from Elderfield 2012 compilation
   d_mgca_calib = read.csv("U_mgca_calib.csv")
@@ -158,16 +163,21 @@ prep.elder = function(){
   ts.max = 1235
   ts.step = 1
   ts.ages = seq(ts.min, ts.max, -ts.step)
-  ts.len = length(ts.ages)
-  
-  #prep the d18O data and add age indicies
+
+  #prep the proxy data
   d_o = d[!is.na(d$d18O), ]
-  o_age.ind = round((ts.min - d_o$Age_ka) / ts.step) + 1
-  
-  #prep the MgCa data and add age indicies
   d_mgca = d[!is.na(d$MgCa),] 
-  mgca_age.ind = round((ts.min - d_mgca$Age_ka) / ts.step) + 1
+
+  #append proxy record ages and condense
+  ts.ages = c(ts.ages, d_o$Age_ka, d_mgca$Age_ka)
+  ts.ages = unique(ts.ages)
+  ts.ages = sort(ts.ages, decreasing = TRUE)
   
+  #Timeseries index for each proxy series and length
+  ts.len = length(ts.ages)
+  o_age.ind = match(d_o$Age_ka, ts.ages)
+  mgca_age.ind = match(d_mgca$Age_ka, ts.ages)
+
   #U spp calibration data from Elderfield 2012 compilation
   d_mgca_calib = read.csv("U_mgca_calib.csv")
   
@@ -207,19 +217,26 @@ prep.multi = function(){
   ts.max = 1235
   ts.step = 1
   ts.ages = seq(ts.min, ts.max, -ts.step)
-  ts.len = length(ts.ages)
   
-  #prep the d18O data and add age indicies
+  #prep the d18O data
   d_o.b = d.b[!is.na(d.b$d18O), ]
-  o_age.ind.b = round((ts.min - d_o.b$Age_ka) / ts.step) + 1
   d_o.e = d.e[!is.na(d.e$d18O), ]
-  o_age.ind.e = round((ts.min - d_o.e$Age_ka) / ts.step) + 1
   
-  #prep the MgCa data and add age indicies
+  #prep the MgCa data
   d_mgca.b = d.b[!is.na(d.b$MgCa),]
-  mgca_age.ind.b = round((ts.min - d_mgca.b$Age_ka) / ts.step) + 1
   d_mgca.e = d.e[!is.na(d.e$MgCa),] 
-  mgca_age.ind.e = round((ts.min - d_mgca.e$Age_ka) / ts.step) + 1
+  
+  #append proxy record ages and condense
+  ts.ages = c(ts.ages, d_o.b$Age_ka, d_o.e$Age_ka, d_mgca.b$Age_ka, d_mgca.e$Age_ka)
+  ts.ages = unique(ts.ages)
+  ts.ages = sort(ts.ages, decreasing = TRUE)
+  
+  #Timeseries index for each proxy series and length
+  ts.len = length(ts.ages)
+  o_age.ind.b = match(d_o.b$Age_ka, ts.ages)
+  o_age.ind.e = match(d_o.e$Age_ka, ts.ages)
+  mgca_age.ind.b = match(d_mgca.b$Age_ka, ts.ages)
+  mgca_age.ind.e = match(d_mgca.e$Age_ka, ts.ages)
   
   #U spp calibration data from Elderfield 2012 compilation
   d_mgca_calib = read.csv("U_mgca_calib.csv")

@@ -15,7 +15,7 @@ model {
   #Process model for MgCa_sw timeseries
   
   for(i in 2:nmgca.ages){
-    MgCa_sw_m[i] = MgCa_sw_m[i-1] * (MgCa_sw_m.eps[i] + 1)
+    MgCa_sw_m[i] = MgCa_sw_m[i-1] * ((MgCa_sw_m.eps[i] * tau[i]) + 1)
     
     MgCa_sw_m.eps[i] ~ dnorm(exp(-(1 - MgCa_sw_m.eps.ac) * tau[i]) * MgCa_sw_m.eps[i-1], 
                                  1 / ((1 / MgCa_sw_m.pre) / (2 * (1 - MgCa_sw_m.eps.ac)) * 

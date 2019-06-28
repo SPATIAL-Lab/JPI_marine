@@ -88,8 +88,8 @@ model {
   #Process model for BWT and d18O timeseries
 
   for(i in 2:nages){
-    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
-    BWT[i] = BWT[i-1] + BWT.eps[i]
+    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i] * tau[i]
+    BWT[i] = BWT[i-1] + BWT.eps[i] * tau[i]
     
     d18O_sw.eps[i] ~ dnorm(exp(-(1 - d18O_sw.eps.ac) * tau[i]) * d18O_sw.eps[i - 1], 
                           1 / ((1 / d18O_sw.pre) / (2 * (1 - d18O_sw.eps.ac)) *
@@ -119,12 +119,12 @@ model {
   BWT.eps.ac ~ dunif(0, 0.4)
 
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
-  d18O_sw.pre.shp = 10
-  d18O_sw.pre.rate = 0.15
+  d18O_sw.pre.shp = 50
+  d18O_sw.pre.rate = 0.5
   
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
-  BWT.pre.shp = 4
-  BWT.pre.rate = 0.4
+  BWT.pre.shp = 25
+  BWT.pre.rate = 0.5
 
   #Data model for seawater MgCa observations
 
@@ -136,7 +136,7 @@ model {
   #Process model for MgCa_sw timeseries
 
   for(i in 2:nmgca.ages){
-    MgCa_sw_m[i] = MgCa_sw_m[i-1] * (MgCa_sw_m.eps[i] + 1)
+    MgCa_sw_m[i] = MgCa_sw_m[i-1] * ((MgCa_sw_m.eps[i] * mgca.tau[i]) + 1)
     
     MgCa_sw_m.eps[i] ~ dnorm(exp(-(1 - MgCa_sw_m.eps.ac) * mgca.tau[i]) * MgCa_sw_m.eps[i-1], 
                              1 / ((1 / MgCa_sw_m.pre) / (2 * (1 - MgCa_sw_m.eps.ac)) * 
