@@ -88,19 +88,22 @@ model {
   #Process model for BWT and d18O timeseries
 
   for(i in 2:nages){
-    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i] * tau[i]
-    BWT[i] = BWT[i-1] + BWT.eps[i] * tau[i]
+    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
+    BWT[i] = BWT[i-1] + BWT.eps[i]
     
-    d18O_sw.eps[i] ~ dnorm(exp(-(1 - d18O_sw.eps.ac) * tau[i]) * d18O_sw.eps[i - 1], 
-                          1 / ((1 / d18O_sw.pre) / (2 * (1 - d18O_sw.eps.ac)) *
-                             (1 - exp(-2 * (1 - d18O_sw.eps.ac) * tau[i]))))
-    BWT.eps[i] ~ dnorm(exp(-(1 - BWT.eps.ac) * tau[i]) * BWT.eps[i - 1], 
-                       1 / ((1 / BWT.pre) / (2 * (1 - BWT.eps.ac)) *
-                         (1 - exp(-2 * (1 - BWT.eps.ac) * tau[i]))))
+    d18O_sw.eps[i] ~ dnorm(d18O_sw.eps[i - 1] * d18O_sw.eps.ac ^ tau[i], 
+                           d18O_sw.eps.num / (1 - d18O_sw.eps.ac ^ (2 * tau[i])))
+    BWT.eps[i] ~ dnorm(BWT.eps[i - 1] * BWT.eps.ac ^ tau[i], 
+                       BWT.eps.num / (1 - BWT.eps.ac ^ (2 * tau[i])))
     
-    tau[i] = ages[i - 1] - ages[i]
+    tau[i] = (ages[i - 1] - ages[i]) * 1000
 
   }
+  
+  #Calculate some values that are constant for all time steps
+
+  d18O_sw.eps.num = (1 - d18O_sw.eps.ac ^ 2) * d18O_sw.pre
+  BWT.eps.num = (1 - BWT.eps.ac ^ 2) * BWT.pre
 
   #Priors on BWT and d18O timeseries model parameters
 
@@ -119,12 +122,12 @@ model {
   BWT.eps.ac ~ dunif(0, 0.4)
 
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
-  d18O_sw.pre.shp = 50
-  d18O_sw.pre.rate = 0.5
+  d18O_sw.pre.shp = 20
+  d18O_sw.pre.rate = 0.1
   
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
-  BWT.pre.shp = 25
-  BWT.pre.rate = 0.5
+  BWT.pre.shp = 20
+  BWT.pre.rate = 1
 
   #Data model for seawater MgCa observations
 
@@ -136,16 +139,17 @@ model {
   #Process model for MgCa_sw timeseries
 
   for(i in 2:nmgca.ages){
-    MgCa_sw_m[i] = MgCa_sw_m[i-1] * ((MgCa_sw_m.eps[i] * mgca.tau[i]) + 1)
+    MgCa_sw_m[i] = MgCa_sw_m[i-1] * ((MgCa_sw_m.eps[i]) + 1)
     
-    MgCa_sw_m.eps[i] ~ dnorm(exp(-(1 - MgCa_sw_m.eps.ac) * mgca.tau[i]) * MgCa_sw_m.eps[i-1], 
-                             1 / ((1 / MgCa_sw_m.pre) / (2 * (1 - MgCa_sw_m.eps.ac)) * 
-                               (1 - exp(-2 * (1 - MgCa_sw_m.eps.ac) * mgca.tau[i]))))
+    MgCa_sw_m.eps[i] ~ dnorm(MgCa_sw_m.eps[i-1] * MgCa_sw_m.eps.ac ^ mgca.tau[i], 
+                             MgCa_sw_m.eps.num / 
+                               (1 - MgCa_sw_m.eps.ac ^ (2 * mgca.tau[i])))
     
     mgca.tau[i] = mgca.ages[i-1] - mgca.ages[i]   
   }
   
-  #MgCa_sw_m.eps[1] ~ dunif(-MgCa_sw_m.eps.hr, MgCa_sw_m.eps.hr)
+  MgCa_sw_m.eps.num = (1 - MgCa_sw_m.eps.ac ^ 2) * MgCa_sw_m.pre
+  
   MgCa_sw_m.eps[1] ~ dnorm(0, MgCa_sw_m.pre)
   MgCa_sw_m[1] ~ dunif(MgCa_sw_m.init.min, MgCa_sw_m.init.max)
   MgCa_sw_m.init.min = 1
@@ -154,8 +158,6 @@ model {
   #Priors on MgCa_sw model parameters  
   
   MgCa_sw_m.eps.ac ~ dunif(0.90, 1)
-  
-  #MgCa_sw_m.eps.hr = 0.01
   
   MgCa_sw_m.pre ~ dgamma(MgCa_sw_m.pre.shp, MgCa_sw_m.pre.rate)
   MgCa_sw_m.pre.shp = 100

@@ -25,7 +25,7 @@ dat = list(nmgca.ages = mgca_ages.len, mgca.ages = mgca_ages,
 ##Parameters to save
 parameters = c("MgCa_sw_m", "MgCa_sw_m.pre", "MgCa_sw_m.eps.ac", "MgCa_sw_m.eps")
 
-##Run it - <4 min for 250k samples
+##Run it - <4 min for 500k samples
 pt = proc.time()
 n.iter = 500000
 n.burnin = 20000

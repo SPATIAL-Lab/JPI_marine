@@ -50,9 +50,7 @@ age.ind = c(99, 120)
 ts.df = data.frame(Age = d$ts.ages[age.ind[1]:age.ind[2]], 
                    BWT = sl$BWT[ts.ind, age.ind[1]:age.ind[2]], 
                    BWT_eps = (sl$BWT[ts.ind, age.ind[1]:age.ind[2]] - 
-                     sl$BWT[ts.ind, (age.ind[1]-1):(age.ind[2]-1)]) / 
-                     (d$ts.ages[(age.ind[1]-1):(age.ind[2]-1)] - 
-                      d$ts.ages[age.ind[1]:age.ind[2]]))
+                     sl$BWT[ts.ind, (age.ind[1]-1):(age.ind[2]-1)]))
 
 #Data frame holding MgCa_sw time series, then match these and extrac to ts.df
 MgCa_sw.df = data.frame(Age = d$mgca.ages, MgCa_sw = sl$MgCa_sw_m[ts.ind,])
@@ -71,18 +69,19 @@ setEPS()
 postscript("../Figure01b.eps", width = 5, height = 7)
 layout(matrix(c(1,2,3),1,3), widths = c(lcm(1.5*2.54), lcm(1*2.54), lcm(1.5*2.54)),
        heights = c(lcm(16), lcm(16), lcm(16)))
+par(cex = 1.2)
 
 #First panel, epsilon BWT
 par(mai=c(0.5,0.5,0,0))
-plot(ts.df$BWT_eps, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="grey", axes=FALSE)
-points(ts.df.sub$BWT_eps, ts.df.sub$Age, pch=21, bg="red")
+plot(ts.df$BWT_eps, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="white", axes=FALSE)
+points(ts.df.sub$BWT_eps, ts.df.sub$Age, pch=21, bg="dark grey")
 axis(1)
 axis(2)
 
 #Second panel, BWT
 par(mai=c(0.5,0,0,0))
-plot(ts.df$BWT, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="grey", axes=FALSE)
-points(ts.df.sub$BWT, ts.df.sub$Age, pch=21, bg="red")
+plot(ts.df$BWT, ts.df$Age, ylim=c(14, 13.0), pch=21, bg="white", axes=FALSE)
+points(ts.df.sub$BWT, ts.df.sub$Age, pch=21, bg="dark grey")
 axis(1)
 
 #Third panel, proxy record
@@ -92,9 +91,9 @@ axis(1)
 for(i in nrow(ts.df.sub):1){
   dp = density(rnorm(100000, ts.df.sub$MgCa_m[i], MgCa_sd))
   polygon(c(dp$x, dp$x[1]), ts.df.sub$Age[i] - c(dp$y, dp$y[1])/50, col="light grey", lty=0)
-  lines(dp$x, ts.df.sub$Age[i] - dp$y / 50)
+  lines(dp$x, ts.df.sub$Age[i] - dp$y / 50, col="dark grey")
 }
-points(ts.df.sub$MgCa_m, ts.df.sub$Age, pch=21, bg="white")
+points(ts.df.sub$MgCa_m, ts.df.sub$Age, pch=21, bg="dark grey")
 points(dl_mgca$MgCa[dl_mgca$Age.Ma>13.1], dl_mgca$Age.Ma[dl_mgca$Age.Ma>13.1], pch=21, bg="red")
 
 dev.off()
@@ -222,7 +221,7 @@ plot(-10, 0, xlab="Age (Ma)", ylab ="Seawater Mg/Ca", xlim=c(0,80), ylim=c(0.8,5
 
 #Plot 2500 representative JPI posterior samples
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$mgca_ts.ages, sl$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
+  lines(d$mgca.ages, sl$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
 }
 
 #curve fit from L15 for comparison
@@ -231,9 +230,9 @@ vals = 5.2 - 0.238 * ages + 0.00661 * ages^2 - 6.66e-5 * ages^3
 lines(ages, vals, col=rgb(0.2,0.4,1))
 
 #Add JPI median and 95% CIs
-lines(d$mgca_ts.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 5], col="red")
-lines(d$mgca_ts.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 3], col="red", lty=3)
-lines(d$mgca_ts.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 7], col="red", lty=3)
+lines(d$mgca.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 5], col="red")
+lines(d$mgca.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 3], col="red", lty=3)
+lines(d$mgca.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 7], col="red", lty=3)
 
 #Points showing Mg/Ca proxy obs and distribution of proxy and calib data
 points(d$d_mgca_sw$Age, d$d_mgca_sw$MgCa, pch=21, bg = "white")
@@ -406,17 +405,25 @@ b.cor = cor(sl$b)
 #Figure 9: 2-d posterior density of environmental time series parameters 
 #####
 
+#Subset the posterior to retain only base ts steps
+times = seq(18, 0, by=-0.05)
+ind = match(times, d$ts.ages)
+BWT = sl$BWT[,ind]
+d18Osw = sl$d18O_sw[,ind]
+
 #First calculate the difference of each BWT and d18O_sw value relative to
 #the 18Ma value for that posterior draw
 #Set aside space
-D_BWT = matrix(double(), nrow = 15000, ncol = 361)
-D_d18O_sw = matrix(double(), nrow = 15000, ncol = 361)
+nr = nrow(BWT)
+nc = ncol(BWT)
+D_BWT = matrix(double(), nrow = nr, ncol = nc)
+D_d18O_sw = matrix(double(), nrow = nr, ncol = nc)
 
 #Calculate differences
-for(i in 1:15000){
-  for(j in  1:361){
-    D_BWT[i,j] = sl$BWT[i,j] - sl$BWT[i,1]
-    D_d18O_sw[i,j] = sl$d18O_sw[i,j] - sl$d18O_sw[i,1]
+for(i in 1:nr){
+  for(j in  1:nc){
+    D_BWT[i,j] = BWT[i,j] - BWT[i,1]
+    D_d18O_sw[i,j] = d18Osw[i,j] - d18Osw[i,1]
   }
 }
 
@@ -426,36 +433,45 @@ D_BWT.m = double()
 D_d18O_sw.m = double()
 
 #Get the medians
-for(i in 1:361){
+for(i in 1:nc){
   D_BWT.m[i] = median(D_BWT[,i])
   D_d18O_sw.m[i] = median(D_d18O_sw[,i])
 }
 
 #2-d kernal density for the differences
+#Using only first chain to reduce memory req
 library(MASS)
 DKE = kde2d(D_BWT, D_d18O_sw, h=c(0.75, 0.3), n=100)
 
+#Correlation for different periods
+lm15 = lm(D_d18O_sw.m[times > 15] ~ D_BWT.m[times > 15])
+lm6 =  lm(D_d18O_sw.m[times > 6 & times < 14] ~ D_BWT.m[times > 6 & times < 14])
+
 #Make space and layout
-png("../Figure08.png", res=600, units="in", width=3, height=3)
+png("../Figure09.png", res=600, units="in", width=3, height=3)
 par(mar=c(5,5,0.5,0.5), cex=0.75)
 
 ##Density plot
 smoothScatter(D_BWT, D_d18O_sw, xlab=expression(Delta*"BWT ("*degree*" C)"),
               ylab = expression(Delta*delta^{18}*"O"[sw]*" (\u2030, VSMOW)"), 
-              xlim = c(-9,4.5), ylim = c(-1.5,2), col="white")
+              xlim = c(-9,4.5), ylim = c(-1,2), col="white")
 
 #Add contours
 contour(DKE, add=TRUE, drawlabels=FALSE, col="grey")
 
 #Colors for plotting the medians
-pal = heat.colors(361)
+pal = heat.colors(nc)
+
+#Lines showing correlation of medians
+abline(lm15, lty=3, col="grey")
+abline(lm6, lty=3, col="grey")
 
 #Plot the medians
 points(D_BWT.m, D_d18O_sw.m, pch=19, col=pal, cex=0.20)
 
 #Legend for the median colorscale
 rect(-9.2, 2.05, -3.6, 1.55, col="grey")
-points(seq(-8.9,-3.9,length.out = 361), rep(1.65, 361), col=pal, cex=0.6)
+points(seq(-8.9,-3.9,length.out = nc), rep(1.65, nc), col=pal, cex=0.6)
 a = c(18,12,6,0)
 xs = seq(-8.8, -3.9, length.out = 4)
 text(xs, 1.75, a, cex=0.7)
@@ -868,6 +884,10 @@ plot(d$ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), type=
 #Calculate among-sample difference between d18O_sw for two records
 #This is based on the independent U1385 and 1123 JPI results, so comparisons
 #are made between random samples
+
+#Extract common time points from two different series
+
+
 #Calculate the differences
 d18O_sw.delta = post.birn$BUGSoutput$sims.list$d18O_sw - post.elder$BUGSoutput$sims.list$d18O_sw
 
@@ -1070,6 +1090,83 @@ text(xl, yl, "(b)")
 dev.off()
 
 #####
+#Supplementary Figure 4: Site 806 calibration data and posterior draws
+#####
+
+d = prep.lear()
+
+#Shorthand
+sl = post.lear$BUGSoutput$sims.list
+
+#Make space and layout
+png("../SI_Figure04.png", units="in", width=8, height=4, res=600)
+layout(matrix(c(1,2), ncol=2), widths = c(4,4), heights = c(4,4))
+par(mai=c(1,1,0.2,0.2), cex=0.85)
+
+##Panel 1: Mg/Ca
+#Set up plot
+plot(d$d_mgca_calib$BWT, d$d_mgca_calib$MgCa, xlab = expression("BWT ("*degree*" C)"), 
+     ylab = expression("Mg/Ca"[f]))
+
+#Sequence of BWT values for plotting 
+bwts = seq(-5, 20, by=2)
+
+#Plot 2500 represenatative samples from JPI posterior
+#Used fixed value of 3.5 for Mg/Ca_sw
+for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
+  mgcas = (sl$a[i,1] + sl$a[i,2] * bwts) * 3.5 ^ sl$a[i,3]
+  lines(bwts, mgcas, col = rgb(0,0,0, 0.01))
+}
+
+#Calculate median model parameters
+a1 = median(sl$a[,1])
+a2 = median(sl$a[,2])
+a3 = median(sl$a[,3])
+
+#Add median values showing Mg/Ca sensitivity
+lines(bwts, (a1 + a2 * bwts) * 3.5 ^ a3, col="red")
+lines(bwts, (a1 + a2 * bwts) * 5.5 ^ a3, col="red", lty=2)
+lines(bwts, (a1 + a2 * bwts) * 1.5 ^ a3, col="red", lty=3)
+
+points(d$d_mgca_calib$BWT, d$d_mgca_calib$MgCa, pch=21, bg="white")
+
+#panel label
+xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "(a)")
+
+##Panel 2: d18O
+#Set up plot
+plot(d$d_d18O_calib$BWT, d$d_d18O_calib$d18O_f.sw, 
+     xlab = expression("BWT ("*degree*" C)"), 
+     ylab = expression(Delta*delta^{18}*"O"[f]*" (\u2030)"))
+
+#Plot 2500 represenatative samples from JPI posterior
+#Used fixed value of 3.5 for Mg/Ca_sw
+for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
+  mgcas = sl$b[i,1] + sl$b[i,2] * bwts + sl$b[i,3]* bwts^2
+  lines(bwts, mgcas, col = rgb(0,0,0, 0.01))
+}
+
+#Calculate median model parameters
+b1 = median(sl$b[,1])
+b2 = median(sl$b[,2])
+b3 = median(sl$b[,3])
+
+#Add median values showing Mg/Ca sensitivity
+lines(bwts, b1 + b2 * bwts + b3 * bwts^2, col="red")
+
+#replot data on top
+points(d$d_d18O_calib$BWT, d$d_d18O_calib$d18O_f.sw, pch=21, bg="white")
+
+#panel label
+xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
+yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
+text(xl, yl, "(b)")
+
+dev.off()
+
+#####
 #Calculate 95% CI width for environmental records
 #####
 
@@ -1084,6 +1181,7 @@ sims = nrow(sl$BWT)
 BWT.start = match("BWT[1]", row.names(su))
 d18O.start = match("d18O_sw[1]", row.names(su))
 MgCa.start = match("MgCa_sw_m[1]", row.names(su))
+ts.len = ncol(sl$BWT)
 
 #95% CI width
 su.diff = as.double(su[,7] - su[,3])
@@ -1104,6 +1202,7 @@ BWT.b.start = match("BWT.b[1]", row.names(su))
 d18O.b.start = match("d18O_sw.b[1]", row.names(su))
 BWT.e.start = match("BWT.e[1]", row.names(su))
 d18O.e.start = match("d18O_sw.e[1]", row.names(su))
+ts.len = ncol(sl$BWT)
 
 #95% CI width
 su.diff = as.double(su[,7] - su[,3])

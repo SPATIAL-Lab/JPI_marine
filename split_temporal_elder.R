@@ -85,19 +85,21 @@ model {
   #Process model for BWT and d18O timeseries
   
   for(i in 2:nages){
-    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i] * tau[i]
-    BWT[i] = BWT[i-1] + BWT.eps[i] * tau[i]
+    d18O_sw[i] = d18O_sw[i-1] + d18O_sw.eps[i]
+    BWT[i] = BWT[i-1] + BWT.eps[i]
     
-    d18O_sw.eps[i] ~ dnorm(exp(-(1 - d18O_sw.eps.ac) * tau[i]) * d18O_sw.eps[i - 1], 
-                           1 / ((1 / d18O_sw.pre) / (2 * (1 - d18O_sw.eps.ac)) *
-                                  (1 - exp(-2 * (1 - d18O_sw.eps.ac) * tau[i]))))
-    BWT.eps[i] ~ dnorm(exp(-(1 - BWT.eps.ac) * tau[i]) * BWT.eps[i - 1], 
-                       1 / ((1 / BWT.pre) / (2 * (1 - BWT.eps.ac)) *
-                              (1 - exp(-2 * (1 - BWT.eps.ac) * tau[i]))))
+    d18O_sw.eps[i] ~ dnorm(d18O_sw.eps[i - 1] * d18O_sw.eps.ac ^ tau[i], 
+                           d18O_sw.eps.num / (1 - d18O_sw.eps.ac ^ (2*tau[i])))
+    BWT.eps[i] ~ dnorm(BWT.eps[i - 1] * BWT.eps.ac ^ tau[i], 
+                       BWT.eps.num / (1 - BWT.eps.ac ^ (2 * tau[i])))
     
-    tau[i] = ages[i - 1] - ages[i]
+    tau[i] = (ages[i - 1] - ages[i])
     
   }
+  
+  #Calculate some values that are constant for all time steps
+  d18O_sw.eps.num = (1 - d18O_sw.eps.ac ^ 2) * d18O_sw.pre
+  BWT.eps.num = (1 - BWT.eps.ac ^ 2) * BWT.pre
   
   #Priors on BWT and d18O timeseries model parameters
   
@@ -116,12 +118,12 @@ model {
   BWT.eps.ac ~ dunif(0, 0.8)
   
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
-  d18O_sw.pre.shp = 10
-  d18O_sw.pre.rate = 1/4
+  d18O_sw.pre.shp = 20
+  d18O_sw.pre.rate = 0.1
   
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
   BWT.pre.shp = 20
-  BWT.pre.rate = 2
+  BWT.pre.rate = 1
   
 }
 

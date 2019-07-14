@@ -38,18 +38,16 @@ dat = list(nages = d$ts.len, ages = d$ts.ages, nmgca.ages = d$mgca_ts.len, mgca.
            MgCa.age.ind = d$mgca_age.ind.all, MgCa = d$d_mgca$MgCa, 
            d18O.age.ind = d$o_age.ind, d18O = d$d_o$d18O)
 
-##Run the inversion - ~15 hours for 1M samples
+#Some parameters for the sampler
+n.iter = 1500000
+n.burnin = 10000
+#n.thin = floor((n.iter - n.burnin) / 5000)
 
 #Clock time
 t1 = proc.time()
-
-#Some parameters for the sampler
 set.seed(t1[3])
-n.iter = 1.5e6
-n.burnin = 1e5
-n.thin = floor((n.iter - n.burnin) / 5000)
 
-#Run the MCMC
+##Run the inversion - ~15 hours for 1M samples
 post.lear = do.call(jags.parallel, list(model.file = "split_temporal_lear.R", parameters.to.save = parameters, 
                                          data = dat, n.chains=3, n.iter = n.iter, 
                                          n.burnin = n.burnin, n.thin = n.thin))
@@ -79,18 +77,16 @@ dat = list(nages = d$ts.len, ages = d$ts.ages,
            MgCa.age.ind = d$mgca_age.ind, MgCa = d$d_mgca$MgCa, 
            d18O.age.ind = d$o_age.ind, d18O = d$d_o$d18O)
 
-##Run the inversion - 50 min for 500k samples
-
-#Start time
-t1 = proc.time()
-
 #Some parameters for the sampler
-set.seed(t1[3])
-n.iter = 50000
+n.iter = 500000
 n.burnin = 10000
 n.thin = floor(n.iter-n.burnin)/5000
 
-#Run it
+#Start time
+t1 = proc.time()
+set.seed(t1[3])
+
+##Run the inversion - 50 min for 500k samples
 post.birn = do.call(jags.parallel, list(model.file = "split_temporal_birn.R", parameters.to.save = parameters, 
                                         data = dat, n.chains=3, n.iter = n.iter, 
                                         n.burnin = n.burnin, n.thin = n.thin))
@@ -120,18 +116,16 @@ dat = list(nages = d$ts.len, ages = d$ts.ages,
            MgCa.age.ind = d$mgca_age.ind, MgCa = d$d_mgca$MgCa, 
            d18O.age.ind = d$o_age.ind, d18O = d$d_o$d18O)
 
-##Run the inversion - 50 min for 500k samples
-
-#Start time
-t1 = proc.time()
-
 #Some parameters for the sampler
-set.seed(t1[3])
 n.iter = 500000
 n.burnin = 10000
 n.thin = floor(n.iter-n.burnin)/5000
 
-#Run it
+#Start time
+t1 = proc.time()
+set.seed(t1[3])
+
+##Run the inversion - 1.3 hr for 500k samples
 post.elder = do.call(jags.parallel, list(model.file = "split_temporal_elder.R", parameters.to.save = parameters, 
                                          data = dat, n.chains=3, n.iter = n.iter, 
                                          n.burnin = n.burnin, n.thin = n.thin))
@@ -156,7 +150,7 @@ parameters = c("d18O_sw.b", "BWT.b", "d18O_sw.e", "BWT.e",
                "a", "MgCa_calib.pre", "b.c", "b.u", "d18O_calib.c.pre", "d18O_calib.u.pre")
 
 ##Data to pass to the model
-dat = list(nages = d$ts.len, d$ts.ages, 
+dat = list(nages = d$ts.len, ages = d$ts.ages, 
            MgCa_calib.bwt.m = d$d_mgca_calib$BWT, MgCa_calib.bwt.sd = d$d_mgca_calib$BWT_sd, MgCa_calib = d$d_mgca_calib$MgCa,
            d18O_calib.u.bwt.m = d$d_d18O_calib.u$BWT, d18O_calib.u.bwt.sd = d$d_d18O_calib.u$BWT_sd, d18O_calib.u = d$d_d18O_calib.u$d18O_f.sw,
            d18O_calib.c.bwt.m = d$d_d18O_calib.c$BWT, d18O_calib.c.bwt.sd = d$d_d18O_calib.c$BWT_sd, d18O_calib.c = d$d_d18O_calib.c$d18O_f.sw,
@@ -166,18 +160,16 @@ dat = list(nages = d$ts.len, d$ts.ages,
            MgCa.age.ind.e = d$mgca_age.ind.e, MgCa.e = d$d_mgca.e$MgCa,
            d18O.age.ind.e = d$o_age.ind.e, d18O.e = d$d_o.e$d18O)
 
-##Run the inversion ~ 1 hour for 100k sims
-
-#Start time
-t1 = proc.time()
-
 #Some parameters for the sampler
-set.seed(t1[3])
 n.iter = 750000
 n.burnin = 10000
 n.thin = floor((n.iter - n.burnin) / 5000)
 
-#Run it
+#Start time
+t1 = proc.time()
+set.seed(t1[3])
+
+##Run the inversion ~ 1 hour for 100k sims
 post.multi = do.call(jags.parallel, list(model.file = "split_temporal_multi.R", parameters.to.save = parameters, 
                                          data = dat, n.chains=3, n.iter = n.iter, 
                                          n.burnin = n.burnin, n.thin = n.thin))
