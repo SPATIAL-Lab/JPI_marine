@@ -102,6 +102,9 @@ dev.off()
 ##Figure 3: Site 806 BWT and d18Osw time series
 #####
 
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
+
 #Make space and layout
 png("../Figure03.png", units="in", width=5, height=5, res=600)
 layout(matrix(c(1,2,3), 3, 1), heights = c(lcm(2.1*2.54), lcm(0.2*2.54), lcm(2.7*2.54)))
@@ -116,7 +119,7 @@ box()
 
 #Plot 2500 representative JPI posterior samples
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$BWT[i, ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Plot data distribution
@@ -147,9 +150,9 @@ lines(dl_mgca$Age.Ma, dl_mgca$BWT.min, col=rgb(0.2,0.4,1), lty=3)
 points(dl_mgca$Age.Ma, dl_mgca$BWT, pch = 20, cex=0.25)
 
 #Median and CIs for JPI
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 5], col="red")
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 3], col="red", lty=3)
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -177,7 +180,7 @@ plot(-10, 0, xlab = "Age (Ma)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, 
 
 #Plot 2500 representative JPI posterior samples
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$d18O_sw[i, ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Plot data distribution
@@ -197,9 +200,9 @@ lines(dl_d18O$Age.Ma, dl_d18O$d18Osw.min, col=rgb(0.2,0.4,1), lty=3)
 points(dl_d18O$Age.Ma, dl_d18O$d18Osw, pch=20, cex=0.25)
 
 #Add JPI median and CIs
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 5], col="red")
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 3], col="red", lty=3)
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -406,10 +409,8 @@ b.cor = cor(sl$b)
 #####
 
 #Subset the posterior to retain only base ts steps
-times = seq(18, 0, by=-0.05)
-ind = match(times, d$ts.ages)
-BWT = sl$BWT[,ind]
-d18Osw = sl$d18O_sw[,ind]
+BWT = sl$BWT[, ts.ind]
+d18Osw = sl$d18O_sw[, ts.ind]
 
 #First calculate the difference of each BWT and d18O_sw value relative to
 #the 18Ma value for that posterior draw
@@ -438,14 +439,17 @@ for(i in 1:nc){
   D_d18O_sw.m[i] = median(D_d18O_sw[,i])
 }
 
+#Matrix gets aweful big so subsample prior to KDE
+subs = seq(1, length(D_BWT), by=floor(length(D_BWT)/500000))
+
 #2-d kernal density for the differences
-#Using only first chain to reduce memory req
 library(MASS)
-DKE = kde2d(D_BWT, D_d18O_sw, h=c(0.75, 0.3), n=100)
+DKE = kde2d(D_BWT[subs], D_d18O_sw[subs], h=c(0.75, 0.3), n=100)
 
 #Correlation for different periods
-lm15 = lm(D_d18O_sw.m[times > 15] ~ D_BWT.m[times > 15])
-lm6 =  lm(D_d18O_sw.m[times > 6 & times < 14] ~ D_BWT.m[times > 6 & times < 14])
+lm15 = lm(D_d18O_sw.m[d$ts.ages.base > 15] ~ D_BWT.m[d$ts.ages.base > 15])
+lm6 =  lm(D_d18O_sw.m[d$ts.ages.base > 6 & d$ts.ages.base < 14] ~ 
+            D_BWT.m[d$ts.ages.base > 6 & d$ts.ages.base < 14])
 
 #Make space and layout
 png("../Figure09.png", res=600, units="in", width=3, height=3)
@@ -463,8 +467,8 @@ contour(DKE, add=TRUE, drawlabels=FALSE, col="grey")
 pal = heat.colors(nc)
 
 #Lines showing correlation of medians
-abline(lm15, lty=3, col="grey")
-abline(lm6, lty=3, col="grey")
+#abline(lm15, lty=3, col="grey")
+#abline(lm6, lty=3, col="grey")
 
 #Plot the medians
 points(D_BWT.m, D_d18O_sw.m, pch=19, col=pal, cex=0.20)
@@ -497,7 +501,7 @@ sl = post.lear$BUGSoutput$sims.list
 par(mai = c(0.1,0.5,0.1,0.1))
 
 #Plot posterior for BWT
-plotd(sl$BWT.eps.ac, col="red", ylab="", ylim=c(0,20), xlim=c(0,0.8), axes=FALSE)
+plotd(sl$BWT.eps.ac, col="red", ylab="", ylim=c(0,25), xlim=c(0,1), axes=FALSE)
 
 #Add axes
 axis(1, labels = FALSE)
@@ -508,7 +512,7 @@ box()
 lined(sl$d18O_sw.eps.ac, col="red", lty=2)
 
 #Add prior
-lines(c(0,0.4), c(1/0.4,1/0.4))
+lines(c(0,1), c(1,1))
 
 #Panel label
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
@@ -517,22 +521,22 @@ text(xl, yl, "(a)")
 
 ##Panel 2 - BWT time series error standard deviation
 par(mai = c(0.1,0.3,0.1,0.1))
-plotd(sqrt(1/sl$BWT.pre), col="red", ylab="", xlim=c(0.2,0.5), axes=FALSE)
+plotd(sqrt(1/sl$BWT.pre), col="red", ylab="", xlim=c(0.04,0.14), ylim=c(0,60), axes=FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
-lined(sqrt(1/rgamma(100000, 20, 2)))
+lined(sqrt(1/rgamma(100000, 20, 0.1)))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "(b)")
 
 ##Panel 3 - d18O time series error standard deviation
 par(mai = c(0.1,0.3,0.1,0.1))
-plotd(sqrt(1/(sl$d18O_sw.pre)), col="red", ylab="", xlim = c(0.075, 0.21), lty=2, axes=FALSE)
+plotd(sqrt(1/(sl$d18O_sw.pre)), col="red", ylab="", xlim = c(0.012, 0.03), ylim=c(0,250), lty=2, axes=FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
-lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
+lined(sqrt(1/(rgamma(100000, 30, 0.01))), lty=2)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "(c)")
@@ -542,43 +546,43 @@ sl = post.multi$BUGSoutput$sims.list
 
 ## Panel 4 - BWT and d18O time series error autocorrelation, site U1385
 par(mai = c(0.1,0.5,0.1,0.1))
-plotd(sl$BWT.b.eps.ac, col="red", ylim=c(0,6), xlim=c(0,0.8), axes=FALSE)
+plotd(sl$BWT.b.eps.ac, col="red", ylim=c(0,30), xlim=c(0,1), axes=FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
 lined(sl$d18O_sw.b.eps.ac, col="red", lty=2)
-lines(c(0,0.8), c(1/0.8,1/0.8))
+lines(c(0,1), c(1,1))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "(d)")
 
 ##Panel 5 - BWT time series error standard deviation, site U1385
 par(mai = c(0.1,0.3,0.1,0.1))
-plotd(sqrt(1/sl$BWT.b.pre), col="red", ylab="", xlim=c(0.2,0.5), axes=FALSE)
+plotd(sqrt(1/sl$BWT.b.pre), col="red", ylab="", xlim=c(0.04,0.14), axes=FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
-lined(sqrt(1/rgamma(100000, 20, 2)))
+lined(sqrt(1/rgamma(100000, 20, 0.1)))
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "(e)")
 
 ##Panel 6 - d18O time series error standard deviation, site U1385
 par(mai = c(0.1,0.3,0.1,0.1))
-plotd(sqrt(1/(sl$d18O_sw.b.pre)), col="red", ylab="", xlim = c(0.075, 0.21), lty=2, axes=FALSE)
+plotd(sqrt(1/(sl$d18O_sw.b.pre)), col="red", ylab="", xlim = c(0.012, 0.03), lty=2, axes=FALSE)
 axis(1, labels=FALSE)
 axis(2)
 box()
-lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
+lined(sqrt(1/(rgamma(100000, 30, 0.01))), lty=2)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
 text(xl, yl, "(f)")
 
 ##Panel 7 - BWT and d18O time series error autocorrelation, site 1123
 par(mai = c(0.5,0.5,0.1,0.1))
-plotd(sl$BWT.e.eps.ac, col="red", ylab="", ylim=c(0,6), xlim=c(0,0.8))
+plotd(sl$BWT.e.eps.ac, col="red", ylab="", ylim=c(0,30), xlim=c(0,1))
 lined(sl$d18O_sw.e.eps.ac, col="red", lty=2)
-lines(c(0,0.8), c(1/0.8,1/0.8))
+lines(c(0,1), c(1,1))
 title(xlab=expression(phi), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
@@ -586,8 +590,8 @@ text(xl, yl, "(g)")
 
 ##Panel 8 - BWT time series error standard deviation, site 1123
 par(mai = c(0.5,0.3,0.1,0.1))
-plotd(sqrt(1/sl$BWT.e.pre), col="red", ylab="", xlim=c(0.2,0.5))
-lined(sqrt(1/rgamma(100000, 20, 2)))
+plotd(sqrt(1/sl$BWT.e.pre), col="red", ylab="", xlim=c(0.04,0.14))
+lined(sqrt(1/rgamma(100000, 20, 0.1)))
 title(xlab=expression(paste(sigma ["BWT"])), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
@@ -595,8 +599,8 @@ text(xl, yl, "(h)")
 
 ##Panel 9 - d18O time series error standard deviation, site 1123
 par(mai = c(0.5,0.3,0.1,0.1))
-plotd(sqrt(1/(sl$d18O_sw.e.pre)), col="red", ylab="", xlim = c(0.075, 0.21), lty=2)
-lined(sqrt(1/(rgamma(100000, 10, 1/5))), lty=2)
+plotd(sqrt(1/(sl$d18O_sw.e.pre)), col="red", ylab="", xlim = c(0.012, 0.03), lty=2)
+lined(sqrt(1/(rgamma(100000, 30, 0.01))), lty=2)
 title(xlab=expression(sigma [paste(delta, "18Osw")]), line=xoff)
 xl = par("usr")[2]-(par("usr")[2]-par("usr")[1])/15
 yl = par("usr")[4]-(par("usr")[4]-par("usr")[3])/15
@@ -610,6 +614,9 @@ dev.off()
 
 #These use data from multi run, load it
 d = prep.multi()
+
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
 
 #Get and recalibrate original interpreted records using our MgCa slope (0.068)
 #These data are directly from the authors' SI and include both raw proxy measurements
@@ -648,12 +655,12 @@ box()
 
 #Plot 2500 representative samples from JPI posterior, first site U1385
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$BWT.b[i,], col = rgb(0.5,0,0, 0.01))
+  lines(d$ts.ages.base, sl$BWT.b[i, ts.ind], col = rgb(0.5,0,0, 0.01))
 }
 
 #Now site 1123
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$BWT.e[i,], col = rgb(0,0,1, 0.01))
+  lines(d$ts.ages.base, sl$BWT.e[i, ts.ind], col = rgb(0,0,1, 0.01))
 }
 
 #Add reconstructions from original papers 
@@ -670,12 +677,12 @@ lines(de$Age.ka, de$BWT.recal, col=rgb(0,0,0.7))
 points(de$Age.ka, de$BWT.recal, pch=20, cex=0.25)
 
 #Add JPI medians and 95% CIs
-lines(d$ts.ages, su[BWT.b.start:(BWT.b.start + d$ts.len - 1), 5])
-lines(d$ts.ages, su[BWT.b.start:(BWT.b.start + d$ts.len - 1), 3], lty=3)
-lines(d$ts.ages, su[BWT.b.start:(BWT.b.start + d$ts.len - 1), 7], lty=3)
-lines(d$ts.ages, su[BWT.e.start:(BWT.e.start + d$ts.len - 1), 5])
-lines(d$ts.ages, su[BWT.e.start:(BWT.e.start + d$ts.len - 1), 3], lty=3)
-lines(d$ts.ages, su[BWT.e.start:(BWT.e.start + d$ts.len - 1), 7], lty=3)
+lines(d$ts.ages.base, su[BWT.b.start + ts.ind - 1, 5])
+lines(d$ts.ages.base, su[BWT.b.start + ts.ind - 1, 3], lty=3)
+lines(d$ts.ages.base, su[BWT.b.start + ts.ind - 1, 7], lty=3)
+lines(d$ts.ages.base, su[BWT.e.start + ts.ind - 1, 5])
+lines(d$ts.ages.base, su[BWT.e.start + ts.ind - 1, 3], lty=3)
+lines(d$ts.ages.base, su[BWT.e.start + ts.ind - 1, 7], lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -690,10 +697,10 @@ plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, 
 
 #Plot 2500 representative samples from JPI posteriors
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$d18O_sw.b[i,], col = rgb(0.5,0,0, 0.01))
+  lines(d$ts.ages.base, sl$d18O_sw.b[i, ts.ind], col = rgb(0.5,0,0, 0.01))
 }
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$d18O_sw.e[i,], col = rgb(0,0,1, 0.01))
+  lines(d$ts.ages.base, sl$d18O_sw.e[i, ts.ind], col = rgb(0,0,1, 0.01))
 }
 
 #Add reconstructions from original papers
@@ -712,12 +719,12 @@ lines(de$Age.ka, de$d18O_sw.recal, col=rgb(0,0,0.7))
 points(de$Age.ka, de$d18O_sw.recal, pch=20, cex=0.25)
 
 #Add JPI medians and 95% CIs
-lines(d$ts.ages, su[d18O.b.start:(d18O.b.start+d$ts.len-1), 5])
-lines(d$ts.ages, su[d18O.b.start:(d18O.b.start+d$ts.len-1), 3], lty=3)
-lines(d$ts.ages, su[d18O.b.start:(d18O.b.start+d$ts.len-1), 7], lty=3)
-lines(d$ts.ages, su[d18O.e.start:(d18O.e.start+d$ts.len-1), 5])
-lines(d$ts.ages, su[d18O.e.start:(d18O.e.start+d$ts.len-1), 3], lty=3)
-lines(d$ts.ages, su[d18O.e.start:(d18O.e.start+d$ts.len-1), 7], lty=3)
+lines(d$ts.ages.base, su[d18O.b.start + ts.ind - 1, 5])
+lines(d$ts.ages.base, su[d18O.b.start + ts.ind - 1, 3], lty=3)
+lines(d$ts.ages.base, su[d18O.b.start + ts.ind - 1, 7], lty=3)
+lines(d$ts.ages.base, su[d18O.e.start + ts.ind - 1, 5])
+lines(d$ts.ages.base, su[d18O.e.start + ts.ind - 1, 3], lty=3)
+lines(d$ts.ages.base, su[d18O.e.start + ts.ind - 1, 7], lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -733,6 +740,9 @@ dev.off()
 #Using site 806 analysis, load it
 d = prep.lear()
 
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
+
 #Shorthand
 sl = post.lear$BUGSoutput$sims.list
 su = post.lear$BUGSoutput$summary
@@ -745,11 +755,11 @@ MgCa.start = match("MgCa_sw_m[1]", row.names(su))
 
 #Calculates BWT change relative to modern in each posterior sample
 #Make space
-BWT.delta = matrix(rep(0, sims * (d$ts.len)), nrow = sims, ncol = (d$ts.len))
+BWT.delta = matrix(rep(0, sims * (length(ts.ind))), nrow = sims)
 
 #Calculate the differences
 for(i in 1:sims){
-  for(j in 1:(d$ts.len)){ BWT.delta[i,j] = sl$BWT[i,j] - sl$BWT[i,d$ts.len]} 
+  for(j in 1:length(ts.ind)){ BWT.delta[i,j] = sl$BWT[i,ts.ind[j]] - sl$BWT[i,d$ts.len]} 
 }
 
 #Now get the zero change value from the emperical CDF of the change time series 
@@ -757,7 +767,7 @@ for(i in 1:sims){
 BWT.delta.p = double()
 
 #Calculate the CDF and find quantile of zero value in it
-for(j in 1:d$ts.len){
+for(j in 1:length(ts.ind)){
   tst = ecdf(BWT.delta[,j]) #This creates a function representing the CDF
   BWT.delta.p[j] = tst(0) #This gets the zero value
 }
@@ -772,8 +782,8 @@ trad = su[(BWT.start + d$ts.len - 1), 5]
 BWT.p = double()
 
 #Calculate the CDF and find quantile value of modern median in it
-for(j in 1:d$ts.len){
-  tst = ecdf(sl$BWT[,j])
+for(j in 1:length(ts.ind)){
+  tst = ecdf(sl$BWT[,ts.ind[j]])
   BWT.p[j] = tst(trad)
 }
 
@@ -790,13 +800,13 @@ title(ylab = expression("BWT ("*degree*" C)"), line = 2.75)
 
 #Plot 2500 representative samples of the JPI posterior for reference
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$BWT[i, ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Add JPI median and 95% CIs
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 5], col="red")
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 3], col="red", lty=3)
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -808,11 +818,11 @@ text(xl, yl, "(a)")
 par(new=TRUE)
 
 #First plot the within-samples result
-plot(d$ts.ages[1:(d$ts.len-1)], BWT.delta.p[1:(d$ts.len-1)], xlim=c(0.05,2), ylim=c(5e-3, 1), type="l", 
+plot(d$ts.ages.base[1:length(ts.ind)-1], BWT.delta.p[1:length(ts.ind)-1], xlim=c(0.05,2), ylim=c(5e-3, 1), type="l", 
      axes=FALSE, log="y", xlab="", ylab="", col="blue")
 
 #Add the between-samples result
-lines(d$ts.ages[1:(d$ts.len-1)], BWT.p[1:(d$ts.len-1)], lty=3, col="blue")
+lines(d$ts.ages.base[1:length(ts.ind)-1], BWT.p[1:length(ts.ind)-1], lty=3, col="blue")
 
 #Lines showing exceedence probabilities of 95 and 99%
 lines(c(-1,6), c(0.05,0.05), lty=2, col="blue")
@@ -824,6 +834,9 @@ mtext(side = 4, "Zero change probability", line = 2.75)
 
 ##Now switch over to the multi-site 1123 and U1385 analysis, load the results
 d = prep.multi()
+
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
 
 #Shorthand
 sl = post.multi$BUGSoutput$sims.list
@@ -837,7 +850,7 @@ BWT.e.start = match("BWT.e[1]", row.names(su))
 d18O.e.start = match("d18O_sw.e[1]", row.names(su))
 
 #Calculate within-sample difference between d18O_sw for the two records
-d18O_sw.delta = sl$d18O_sw.b - sl$d18O_sw.e
+d18O_sw.delta = sl$d18O_sw.b[,ts.ind] - sl$d18O_sw.e[,ts.ind]
 
 #Get quantile value for zero difference
 #Make space
@@ -857,13 +870,13 @@ plot(-10, 0, xlab = "Age (ka)", ylab = expression(Delta*delta^{18}*"O"[sw]*" (U1
 
 #Plot 1500 representative samples from the JPI posterior
 for(i in seq(1, sims, by = max(floor(sims / 1500),1))){
-  lines(d$ts.ages, d18O_sw.delta[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, d18O_sw.delta[i,], col = rgb(0,0,0, 0.01))
 }
 
 #Add JPI median and 95% CIs
-lines(d$ts.ages, d18O_sw.ptiles[2,], col="red")
-lines(d$ts.ages, d18O_sw.ptiles[1,], col="red", lty=3)
-lines(d$ts.ages, d18O_sw.ptiles[3,], col="red", lty=3)
+lines(d$ts.ages.base, d18O_sw.ptiles[2,], col="red")
+lines(d$ts.ages.base, d18O_sw.ptiles[1,], col="red", lty=3)
+lines(d$ts.ages.base, d18O_sw.ptiles[3,], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -877,7 +890,7 @@ par(new = TRUE)
 #First plot the within-sample zero difference probabilites
 #Use of nested min/max - min gives 2-sided test (e.g., 0.99 plots as 0.01),
 #max plots off-scale values as flat line at bottom of panel
-plot(d$ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), type="l", 
+plot(d$ts.ages.base, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), type="l", 
      log="y", axes = FALSE, xlim=c(1239,1315), ylim=c(5e-4,5e-1), xlab="", ylab="", 
      col="blue")
 
@@ -885,11 +898,16 @@ plot(d$ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), type=
 #This is based on the independent U1385 and 1123 JPI results, so comparisons
 #are made between random samples
 
-#Extract common time points from two different series
+d.b = prep.birn()
+d.e = prep.elder()
 
+#Get index values for base time series
+ts.ind.b = match(d.b$ts.ages.base, d.b$ts.ages)
+ts.ind.e = match(d.e$ts.ages.base, d.e$ts.ages)
 
 #Calculate the differences
-d18O_sw.delta = post.birn$BUGSoutput$sims.list$d18O_sw - post.elder$BUGSoutput$sims.list$d18O_sw
+d18O_sw.delta = post.birn$BUGSoutput$sims.list$d18O_sw[,ts.ind.b] - 
+  post.elder$BUGSoutput$sims.list$d18O_sw[,ts.ind.e]
 
 #Get quantile value for zero difference
 #Make space
@@ -903,7 +921,7 @@ for(j in 1:ncol(d18O_sw.delta)){
 }
 
 #Plot the results
-lines(d$ts.ages, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), lty=3, 
+lines(d$ts.ages.base, pmax(pmin(d18O_sw.ptiles[4,],1-d18O_sw.ptiles[4,]), 5e-4), lty=3, 
       col="blue")
 
 #Lines showing exceedence probabilities of 95 and 99%
@@ -948,6 +966,9 @@ dev.off()
 #Load data for site U1385
 d = prep.birn()
 
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
+
 #Original interpreted data to plot for comparison
 db = read.csv("birner_2016_interp.csv")
 
@@ -974,16 +995,16 @@ box()
 
 #Plot 2500 representative samples from JPI posterior
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$BWT[i,ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Add original interpretation of U1385 record based on down-core calibration 
 lines(db$Age_ka, db$BWT, col=rgb(0,0,0.5))
 
 #Add JPI median and 95% CIs
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 5], col="red")
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 3], col="red", lty=3)
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -997,16 +1018,16 @@ plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, 
 
 #Plot 2500 representative samples from JPI posterior
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$d18O_sw[i, ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Add original authors' interpretation
 lines(db$Age_ka, db$d18O_sw, col=rgb(0,0,0.5))
 
 #Add JPI median and 95% CIs
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 5], col="red")
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 3], col="red", lty=3)
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -1021,6 +1042,9 @@ dev.off()
 
 #Load data for site 1123
 d = prep.elder()
+
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
 
 #Original interpreted data to plot for comparison
 de = read.csv("elderfield_2012_interp.csv")
@@ -1048,16 +1072,16 @@ box()
 
 #Plot 2500 represenatative samples from JPI posterior
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$BWT[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$BWT[i, ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Add original authors' interpretation based on donw-core calibration
 lines(de$Age.ka, de$BWT, col=rgb(0,0,0.5))
 
 #Add JPI median and 95% CIs
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 5], col="red")
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 3], col="red", lty=3)
-lines(d$ts.ages, su[BWT.start:(BWT.start + d$ts.len - 1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[BWT.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -1071,16 +1095,16 @@ plot(-10, 0, xlab = "Age (ka)", ylab = expression(delta^{18}*"O"[sw]*" (\u2030, 
 
 #Plot 2500 represenatative samples from JPI posterior
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$ts.ages, sl$d18O_sw[i,], col = rgb(0,0,0, 0.01))
+  lines(d$ts.ages.base, sl$d18O_sw[i, ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #Add original authors' interpretation
 lines(de$Age.ka, de$d18O_sw, col=rgb(0,0,0.5))
 
 #Add JPI median and 95% CIs
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 5], col="red")
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 3], col="red", lty=3)
-lines(d$ts.ages, su[d18O.start:(d18O.start+d$ts.len-1), 7], col="red", lty=3)
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 5], col="red")
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$ts.ages.base, su[d18O.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Panel label
 xl = par("usr")[1]+(par("usr")[2]-par("usr")[1])/25
@@ -1097,6 +1121,7 @@ d = prep.lear()
 
 #Shorthand
 sl = post.lear$BUGSoutput$sims.list
+sims = nrow(sl$BWT)
 
 #Make space and layout
 png("../SI_Figure04.png", units="in", width=8, height=4, res=600)
@@ -1202,7 +1227,7 @@ BWT.b.start = match("BWT.b[1]", row.names(su))
 d18O.b.start = match("d18O_sw.b[1]", row.names(su))
 BWT.e.start = match("BWT.e[1]", row.names(su))
 d18O.e.start = match("d18O_sw.e[1]", row.names(su))
-ts.len = ncol(sl$BWT)
+ts.len = ncol(sl$BWT.e)
 
 #95% CI width
 su.diff = as.double(su[,7] - su[,3])

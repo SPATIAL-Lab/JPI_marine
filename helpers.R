@@ -34,7 +34,7 @@ prep.lear = function(){
   ts.min = 18
   ts.max = 0
   ts.step = 0.05
-  ts.ages = seq(ts.min, ts.max, -ts.step)
+  ts.ages.base = seq(ts.min, ts.max, -ts.step)
   
   ##Prep the foram data, first read
   d = read.csv("Lear_combined.csv")
@@ -44,7 +44,7 @@ prep.lear = function(){
   d_o = d_o[d_o$Sample.ID != "806B 47-5 38-43",]
 
   #Add O data ages to age vector
-  ts.ages = c(ts.ages, d_o$Age.Ma)
+  ts.ages = c(ts.ages.base, d_o$Age.Ma)
   
   ##Now split out the MgCa data
   d_mgca = d[!is.na(d$MgCa),]
@@ -91,7 +91,7 @@ prep.lear = function(){
   d_d18O_calib = read.csv("C_d18O_calib.csv")
   d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
-  return(list(ts.ages = ts.ages, ts.len = ts.len, mgca.ages = mgca_ages,
+  return(list(ts.ages.base = ts.ages.base, ts.ages = ts.ages, ts.len = ts.len, mgca.ages = mgca_ages,
               mgca_ts.len = mgca_ages.len, d_mgca = d_mgca, d_o = d_o, d_mgca_sw = d_mgca_sw,
               d_mgca_calib = d_mgca_calib, d_d18O_calib = d_d18O_calib,
               o_age.ind = o_age.ind, mgca_age.ind.all = mgca_age.ind.all,
@@ -111,14 +111,14 @@ prep.birn = function(){
   ts.min = 1320
   ts.max = 1235
   ts.step = 1
-  ts.ages = seq(ts.min, ts.max, -ts.step)
+  ts.ages.base = seq(ts.min, ts.max, -ts.step)
 
   #prep the d18O and MgCa data
   d_o = d[!is.na(d$d18O), ]
   d_mgca = d[!is.na(d$MgCa),]
   
   #append proxy record ages and condense
-  ts.ages = c(ts.ages, d_o$Age_ka, d_mgca$Age_ka)
+  ts.ages = c(ts.ages.base, d_o$Age_ka, d_mgca$Age_ka)
   ts.ages = unique(ts.ages)
   ts.ages = sort(ts.ages, decreasing = TRUE)
   
@@ -140,7 +140,7 @@ prep.birn = function(){
   mgca_sw_sd.neo = sd(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80])  #is 1 Ma
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
-  return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
+  return(list(ts.ages.base = ts.ages.base, ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
               d_mgca_calib = d_mgca_calib, d_d18O_calib = d_d18O_calib,
               o_age.ind = o_age.ind, mgca_age.ind = mgca_age.ind,
               mgca_sw_neo = mgca_sw_neo))  
@@ -162,14 +162,14 @@ prep.elder = function(){
   ts.min = 1320
   ts.max = 1235
   ts.step = 1
-  ts.ages = seq(ts.min, ts.max, -ts.step)
+  ts.ages.base = seq(ts.min, ts.max, -ts.step)
 
   #prep the proxy data
   d_o = d[!is.na(d$d18O), ]
   d_mgca = d[!is.na(d$MgCa),] 
 
   #append proxy record ages and condense
-  ts.ages = c(ts.ages, d_o$Age_ka, d_mgca$Age_ka)
+  ts.ages = c(ts.ages.base, d_o$Age_ka, d_mgca$Age_ka)
   ts.ages = unique(ts.ages)
   ts.ages = sort(ts.ages, decreasing = TRUE)
   
@@ -191,7 +191,7 @@ prep.elder = function(){
   mgca_sw_sd.neo = sd(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80])  #is 1 Ma
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
-  return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
+  return(list(ts.ages.base = ts.ages.base, ts.ages = ts.ages, ts.len = ts.len, d_mgca = d_mgca, d_o = d_o, 
               d_mgca_calib = d_mgca_calib, d_d18O_calib = d_d18O_calib,
               o_age.ind = o_age.ind, mgca_age.ind = mgca_age.ind,
               mgca_sw_neo = mgca_sw_neo))  
@@ -216,7 +216,7 @@ prep.multi = function(){
   ts.min = 1320
   ts.max = 1235
   ts.step = 1
-  ts.ages = seq(ts.min, ts.max, -ts.step)
+  ts.ages.base = seq(ts.min, ts.max, -ts.step)
   
   #prep the d18O data
   d_o.b = d.b[!is.na(d.b$d18O), ]
@@ -227,7 +227,7 @@ prep.multi = function(){
   d_mgca.e = d.e[!is.na(d.e$MgCa),] 
   
   #append proxy record ages and condense
-  ts.ages = c(ts.ages, d_o.b$Age_ka, d_o.e$Age_ka, d_mgca.b$Age_ka, d_mgca.e$Age_ka)
+  ts.ages = c(ts.ages.base, d_o.b$Age_ka, d_o.e$Age_ka, d_mgca.b$Age_ka, d_mgca.e$Age_ka)
   ts.ages = unique(ts.ages)
   ts.ages = sort(ts.ages, decreasing = TRUE)
   
@@ -254,7 +254,7 @@ prep.multi = function(){
   mgca_sw_sd.neo = sd(post.lear$BUGSoutput$sims.list$MgCa_sw_m[,80])  #is 1 Ma
   mgca_sw_neo = c(mgca_sw_m.neo, mgca_sw_sd.neo)
   
-  return(list(ts.ages = ts.ages, ts.len = ts.len, d_mgca.b = d_mgca.b, d_o.b = d_o.b, 
+  return(list(ts.ages.base = ts.ages.base, ts.ages = ts.ages, ts.len = ts.len, d_mgca.b = d_mgca.b, d_o.b = d_o.b, 
               d_mgca.e = d_mgca.e, d_o.e = d_o.e, d_mgca_calib = d_mgca_calib, 
               d_d18O_calib.u = d_d18O_calib.u, d_d18O_calib.c = d_d18O_calib.c,
               o_age.ind.b = o_age.ind.b, mgca_age.ind.b = mgca_age.ind.b,

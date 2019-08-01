@@ -39,9 +39,9 @@ dat = list(nages = d$ts.len, ages = d$ts.ages, nmgca.ages = d$mgca_ts.len, mgca.
            d18O.age.ind = d$o_age.ind, d18O = d$d_o$d18O)
 
 #Some parameters for the sampler
-n.iter = 1500000
+n.iter = 500000
 n.burnin = 10000
-#n.thin = floor((n.iter - n.burnin) / 5000)
+n.thin = floor((n.iter - n.burnin) / 1500)
 
 #Clock time
 t1 = proc.time()
@@ -49,7 +49,7 @@ set.seed(t1[3])
 
 ##Run the inversion - ~15 hours for 1M samples
 post.lear = do.call(jags.parallel, list(model.file = "split_temporal_lear.R", parameters.to.save = parameters, 
-                                         data = dat, n.chains=3, n.iter = n.iter, 
+                                         data = dat, n.chains=9, n.iter = n.iter, 
                                          n.burnin = n.burnin, n.thin = n.thin))
 
 #Time taken
@@ -161,7 +161,7 @@ dat = list(nages = d$ts.len, ages = d$ts.ages,
            d18O.age.ind.e = d$o_age.ind.e, d18O.e = d$d_o.e$d18O)
 
 #Some parameters for the sampler
-n.iter = 750000
+n.iter = 250000
 n.burnin = 10000
 n.thin = floor((n.iter - n.burnin) / 5000)
 
@@ -171,7 +171,7 @@ set.seed(t1[3])
 
 ##Run the inversion ~ 1 hour for 100k sims
 post.multi = do.call(jags.parallel, list(model.file = "split_temporal_multi.R", parameters.to.save = parameters, 
-                                         data = dat, n.chains=3, n.iter = n.iter, 
+                                         data = dat, n.chains=9, n.iter = n.iter, 
                                          n.burnin = n.burnin, n.thin = n.thin))
 
 #Time taken

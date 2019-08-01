@@ -119,12 +119,12 @@ model {
   BWT.eps.ac ~ dunif(0, 0.8)
 
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
-  d18O_sw.pre.shp = 20
-  d18O_sw.pre.rate = 0.1
+  d18O_sw.pre.shp = 30
+  d18O_sw.pre.rate = 0.01
   
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
   BWT.pre.shp = 20
-  BWT.pre.rate = 1
+  BWT.pre.rate = 0.1
 
 }
 

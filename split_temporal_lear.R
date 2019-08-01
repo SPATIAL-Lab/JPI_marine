@@ -96,6 +96,7 @@ model {
     BWT.eps[i] ~ dnorm(BWT.eps[i - 1] * BWT.eps.ac ^ tau[i], 
                        BWT.eps.num / (1 - BWT.eps.ac ^ (2 * tau[i])))
     
+    #ages here are in Myr, convert to kyr
     tau[i] = (ages[i - 1] - ages[i]) * 1000
 
   }
@@ -118,16 +119,16 @@ model {
   BWT.init.min = 3
   BWT.init.max = 8
 
-  d18O_sw.eps.ac ~ dunif(0, 0.4)
-  BWT.eps.ac ~ dunif(0, 0.4)
+  d18O_sw.eps.ac ~ dunif(0, 1)
+  BWT.eps.ac ~ dunif(0, 1)
 
   d18O_sw.pre ~ dgamma(d18O_sw.pre.shp, d18O_sw.pre.rate)
-  d18O_sw.pre.shp = 20
-  d18O_sw.pre.rate = 0.1
+  d18O_sw.pre.shp = 30
+  d18O_sw.pre.rate = 0.01
   
   BWT.pre ~ dgamma(BWT.pre.shp, BWT.pre.rate)
   BWT.pre.shp = 20
-  BWT.pre.rate = 1
+  BWT.pre.rate = 0.1
 
   #Data model for seawater MgCa observations
 
