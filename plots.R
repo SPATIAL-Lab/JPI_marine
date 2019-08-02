@@ -236,9 +236,9 @@ vals = 5.2 - 0.238 * ages + 0.00661 * ages^2 - 6.66e-5 * ages^3
 lines(ages, vals, col=rgb(0.2,0.4,1))
 
 #Add JPI median and 95% CIs
-lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind, 5], col="red")
-lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind, 3], col="red", lty=3)
-lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind, 7], col="red", lty=3)
+lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind - 1, 5], col="red")
+lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind - 1, 3], col="red", lty=3)
+lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind - 1, 7], col="red", lty=3)
 
 #Points showing Mg/Ca proxy obs and distribution of proxy and calib data
 points(d$d_mgca_sw$Age, d$d_mgca_sw$MgCa, pch=21, bg = "white")
