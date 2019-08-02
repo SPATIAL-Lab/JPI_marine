@@ -215,6 +215,9 @@ dev.off()
 #Figure 2: The Mg/Ca sw time series
 #####
 
+#Get index values for base time series
+ts.ind = match(d$mgca.ts.ages.base, d$mgca.ages)
+
 #Make space and layout
 png("../Figure02.png", units="in", width=5, height=2.75, res=600)
 par(mar=c(4,4,1,1), cex=0.85)
@@ -224,7 +227,7 @@ plot(-10, 0, xlab="Age (Ma)", ylab ="Seawater Mg/Ca", xlim=c(0,80), ylim=c(0.8,5
 
 #Plot 2500 representative JPI posterior samples
 for(i in seq(1, sims, by = max(floor(sims / 2500),1))){
-  lines(d$mgca.ages, sl$MgCa_sw_m[i,], col = rgb(0,0,0, 0.01))
+  lines(d$mgca.ages[ts.ind], sl$MgCa_sw_m[i,ts.ind], col = rgb(0,0,0, 0.01))
 }
 
 #curve fit from L15 for comparison
@@ -233,9 +236,9 @@ vals = 5.2 - 0.238 * ages + 0.00661 * ages^2 - 6.66e-5 * ages^3
 lines(ages, vals, col=rgb(0.2,0.4,1))
 
 #Add JPI median and 95% CIs
-lines(d$mgca.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 5], col="red")
-lines(d$mgca.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 3], col="red", lty=3)
-lines(d$mgca.ages, su[MgCa.start:(MgCa.start+d$mgca_ts.len-1), 7], col="red", lty=3)
+lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind, 5], col="red")
+lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind, 3], col="red", lty=3)
+lines(d$mgca.ages[ts.ind], su[MgCa.start + ts.ind, 7], col="red", lty=3)
 
 #Points showing Mg/Ca proxy obs and distribution of proxy and calib data
 points(d$d_mgca_sw$Age, d$d_mgca_sw$MgCa, pch=21, bg = "white")
@@ -407,6 +410,9 @@ b.cor = cor(sl$b)
 #####
 #Figure 9: 2-d posterior density of environmental time series parameters 
 #####
+
+#Get index values for base time series
+ts.ind = match(d$ts.ages.base, d$ts.ages)
 
 #Subset the posterior to retain only base ts steps
 BWT = sl$BWT[, ts.ind]

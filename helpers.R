@@ -63,7 +63,7 @@ prep.lear = function(){
   mgca_ts.min = 80
   mgca_ts.max = 0
   mgca_ts.step = 1
-  mgca_ts.ages = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
+  mgca_ts.ages.base = seq(mgca_ts.min, mgca_ts.max, -mgca_ts.step)
   
   ##Read in paleo-seawater MgCa data
   d_mgca_sw = read.csv("mgca_sw.csv")
@@ -72,7 +72,7 @@ prep.lear = function(){
   d_mgca_calib = read.csv("O_mgca_calib.csv")
   
   ##Append all sample ages to ts age vector
-  mgca_ages = c(mgca_ts.ages, d_mgca_sw$Age, d_mgca$Age.Ma, d_mgca_calib$Age)
+  mgca_ages = c(mgca_ts.ages.base, d_mgca_sw$Age, d_mgca$Age.Ma, d_mgca_calib$Age)
   mgca_ages = unique(mgca_ages)
   mgca_ages = sort(mgca_ages, decreasing = TRUE)
   
@@ -91,7 +91,8 @@ prep.lear = function(){
   d_d18O_calib = read.csv("C_d18O_calib.csv")
   d_d18O_calib = d_d18O_calib[is.na(d_d18O_calib$Ignore),]
 
-  return(list(ts.ages.base = ts.ages.base, ts.ages = ts.ages, ts.len = ts.len, mgca.ages = mgca_ages,
+  return(list(ts.ages.base = ts.ages.base, ts.ages = ts.ages, ts.len = ts.len, 
+              mgca.ts.ages.base = mgca_ts.ages.base, mgca.ages = mgca_ages,
               mgca_ts.len = mgca_ages.len, d_mgca = d_mgca, d_o = d_o, d_mgca_sw = d_mgca_sw,
               d_mgca_calib = d_mgca_calib, d_d18O_calib = d_d18O_calib,
               o_age.ind = o_age.ind, mgca_age.ind.all = mgca_age.ind.all,
